@@ -415,7 +415,7 @@
 
       <div class="ficha-actions">
         <button class="btn btn-primary" id="btn-pdf" onclick="descargarPDF()">⬇ Descargar PDF</button>
-        <button class="btn btn-outline" onclick="compartirWhatsApp()" style="background:#25D366;color:#fff;border:none">
+        <button class="btn btn-outline" id="btn-whatsapp" onclick="compartirWhatsApp()" style="background:#25D366;color:#fff;border:none">
           <span style="font-size:16px">💬</span> Compartir por WhatsApp
         </button>
         <button class="btn btn-outline" onclick="go('s-login')" style="margin-top:2px">← Volver al inicio</button>
@@ -918,27 +918,57 @@ async function descargarPDF() {
   }
 }
 
-function compartirWhatsApp() {
+async function compartirWhatsApp() {
   const p = currentParticipante;
   if (!p) return;
-  const texto = [
+
+  const btn = document.getElementById('btn-whatsapp');
+  btn.innerHTML = '<span class="spinner"></span>Preparando…';
+  btn.disabled = true;
+
+  const mensaje = [
     `¡Tu registro para la Conferencia JAS 2026 ha sido confirmado!`,
-    ``,
-    `👤 *${p.nombre}*`,
-    `🏛 ${p.estaca} · ${p.cc}`,
-    ``,
-    `🚌 *Bus:* ${p.bus || '—'}`,
-    `🍽 *Mesa de recojo:* ${p.mesa || '—'}`,
-    `🎽 *Talla polo:* ${p.talla_polo || '—'}`,
-    `🏠 *Habitación:* ${p.habitacion || '—'}`,
-    `👥 *Consejeros:* ${p.consejeros || '—'}`,
-    `📦 *Salón equipaje:* ${p.salon || '—'}`,
-    `🏢 *Compañía:* ${p.compania || '—'}`,
-    ``,
-    `_Centro Vacacional Huampaní_`,
   ].join('\n');
-  const url = 'https://wa.me/?text=' + encodeURIComponent(texto);
-  window.open(url, '_blank');
+
+  try {
+    if (typeof html2canvas === 'undefined') throw new Error('no_lib');
+
+    // Ocultar botones, capturar ficha como imagen
+    const actionsEl = document.querySelector('#s-ficha .ficha-actions');
+    actionsEl.style.display = 'none';
+    const fichaEl = document.querySelector('#s-ficha .ficha');
+    const canvas = await html2canvas(fichaEl, {
+      scale: 3, useCORS: true, backgroundColor: '#ffffff', logging: false,
+    });
+    actionsEl.style.display = '';
+
+    // Convertir canvas a Blob PNG
+    const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+    const file = new File([blob], 'ficha_jas2026.png', { type: 'image/png' });
+
+    // Web Share API con imagen
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ text: mensaje, files: [file] });
+    } else {
+      // Fallback: descargar imagen + abrir WhatsApp con texto
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'ficha_jas2026.png';
+      a.click();
+      URL.revokeObjectURL(a.href);
+      setTimeout(() => {
+        window.open('https://wa.me/?text=' + encodeURIComponent(mensaje), '_blank');
+      }, 800);
+    }
+  } catch (e) {
+    if (e.name !== 'AbortError') {
+      // Si falla todo, al menos abrir WhatsApp con el texto
+      window.open('https://wa.me/?text=' + encodeURIComponent(mensaje), '_blank');
+    }
+  } finally {
+    btn.innerHTML = '<span style="font-size:16px">💬</span> Compartir por WhatsApp';
+    btn.disabled = false;
+  }
 }
 
 // ════════════════════════════════════════
