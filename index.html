@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1B3A6B">
+<title>JAS 2026 · Registro</title>
+<link rel="manifest" href="manifest.json">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --blue:    #1B3A6B;
+    --blue-2:  #2A5298;
+    --blue-lt: #E8F0FC;
+    --gold:    #F5A623;
+    --gold-dk: #C4821A;
+    --teal:    #0F7B6C;
+    --teal-lt: #E4F5F2;
+    --coral:   #E05C3A;
+    --gray-1:  #F5F5F5;
+    --gray-2:  #E8E8E8;
+    --gray-3:  #AAAAAA;
+    --gray-4:  #666666;
+    --text:    #1A1A1A;
+    --white:   #FFFFFF;
+    --danger:  #C0392B;
+    --warn-bg: #FFF8E1;
+    --warn-tx: #7B5800;
+    --ok-bg:   #E8F5E9;
+    --ok-tx:   #1B6B2A;
+    --r:       12px;
+    --r-sm:    8px;
+  }
+
+  html, body { height: 100%; background: var(--gray-1); font-family: 'Segoe UI', system-ui, sans-serif; color: var(--text); }
+
+  /* ─── SCREENS ─── */
+  .screen { display: none; flex-direction: column; min-height: 100vh; }
+  .screen.active { display: flex; }
+
+  /* ─── TOPBAR ─── */
+  .topbar {
+    background: var(--blue);
+    color: var(--white);
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .topbar h1 { font-size: 16px; font-weight: 600; flex: 1; }
+  .topbar-back {
+    background: rgba(255,255,255,.15);
+    border: none; color: var(--white);
+    width: 34px; height: 34px;
+    border-radius: 50%; cursor: pointer;
+    font-size: 20px; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .topbar-badge {
+    background: var(--gold);
+    color: var(--blue);
+    font-size: 11px; font-weight: 700;
+    padding: 3px 11px; border-radius: 20px;
+    white-space: nowrap;
+  }
+
+  /* ─── HERO (login) ─── */
+  .hero {
+    background: linear-gradient(160deg, var(--blue) 0%, var(--blue-2) 100%);
+    color: var(--white);
+    padding: 48px 24px 36px;
+    text-align: center;
+  }
+  .hero-logo {
+    font-size: 56px; font-weight: 800;
+    letter-spacing: -3px; line-height: 1;
+  }
+  .hero-logo span { color: var(--gold); }
+  .hero-tagline {
+    font-size: 12px; letter-spacing: 2px;
+    text-transform: uppercase; opacity: .7; margin-top: 8px;
+  }
+  .hero-pill {
+    display: inline-block; margin-top: 18px;
+    background: rgba(255,255,255,.12);
+    border-radius: 20px; padding: 6px 18px;
+    font-size: 12px;
+  }
+
+  /* ─── LOGIN CARDS ─── */
+  .login-cards { padding: 24px 18px; display: flex; flex-direction: column; gap: 12px; }
+  .login-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: var(--gray-4); margin-bottom: 4px; }
+  .role-card {
+    background: var(--white);
+    border-radius: var(--r);
+    padding: 18px 16px;
+    display: flex; align-items: center; gap: 14px;
+    cursor: pointer;
+    border: 1.5px solid var(--gray-2);
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .role-card:hover { border-color: var(--blue); box-shadow: 0 4px 18px rgba(27,58,107,.13); }
+  .role-icon { width: 46px; height: 46px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+  .role-card h3 { font-size: 15px; font-weight: 600; }
+  .role-card p { font-size: 12px; color: var(--gray-4); margin-top: 2px; }
+  .role-arrow { margin-left: auto; color: var(--gray-3); font-size: 22px; }
+
+  /* ─── FORMS ─── */
+  .form-body { padding: 20px 18px; flex: 1; display: flex; flex-direction: column; gap: 16px; }
+  .field label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--gray-4); margin-bottom: 6px; }
+  .field input, .field select {
+    width: 100%; padding: 12px 14px;
+    border: 1.5px solid var(--gray-2);
+    border-radius: var(--r-sm);
+    font-size: 16px; color: var(--text);
+    background: var(--white); outline: none;
+    transition: border-color .15s;
+  }
+  .field input:focus, .field select:focus { border-color: var(--blue); }
+  .field input.error { border-color: var(--danger); }
+
+  /* ─── BUTTONS ─── */
+  .btn {
+    width: 100%; padding: 14px;
+    border: none; border-radius: var(--r-sm);
+    font-size: 15px; font-weight: 700;
+    cursor: pointer; transition: opacity .15s, transform .1s;
+    letter-spacing: .2px;
+  }
+  .btn:active { transform: scale(.98); }
+  .btn-primary  { background: var(--blue);  color: var(--white); }
+  .btn-gold     { background: var(--gold);  color: var(--blue);  }
+  .btn-teal     { background: var(--teal);  color: var(--white); }
+  .btn-outline  { background: transparent; border: 1.5px solid var(--gray-2); color: var(--text); }
+  .btn-danger   { background: var(--danger); color: var(--white); }
+
+  /* ─── ALERTS ─── */
+  .alert { padding: 13px 15px; border-radius: var(--r-sm); font-size: 13px; line-height: 1.55; }
+  .alert-info    { background: var(--blue-lt); color: var(--blue); }
+  .alert-warn    { background: var(--warn-bg); color: var(--warn-tx); }
+  .alert-ok      { background: var(--ok-bg);   color: var(--ok-tx); }
+  .alert-danger  { background: #fde8e8; color: var(--danger); }
+
+  /* ─── FICHA ─── */
+  .ficha-wrap { padding: 16px 14px 24px; flex: 1; overflow-y: auto; }
+  .ficha {
+    background: var(--white);
+    border-radius: var(--r);
+    overflow: hidden;
+    box-shadow: 0 3px 20px rgba(0,0,0,.10);
+  }
+  .ficha-header {
+    background: var(--blue);
+    color: var(--white);
+    padding: 20px;
+    text-align: center;
+  }
+  .ficha-header h2 { font-size: 26px; font-weight: 800; letter-spacing: -1.5px; }
+  .ficha-header h2 span { color: var(--gold); }
+  .ficha-header p { font-size: 11px; opacity: .7; letter-spacing: 1px; text-transform: uppercase; margin-top: 3px; }
+  .ficha-nombre { padding: 18px 20px 12px; text-align: center; border-bottom: 1px solid var(--gray-2); }
+  .ficha-nombre h3 { font-size: 22px; font-weight: 700; }
+  .ficha-nombre p { font-size: 12px; color: var(--gray-4); margin-top: 3px; letter-spacing: .3px; }
+  .ficha-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-top: 1px solid var(--gray-2);
+  }
+  .fc { padding: 13px 16px; border-right: 1px solid var(--gray-2); border-bottom: 1px solid var(--gray-2); }
+  .fc:nth-child(even) { border-right: none; }
+  .fc.full { grid-column: 1 / -1; border-right: none; }
+  .fc-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: var(--gray-3); margin-bottom: 4px; }
+  .fc-val { font-size: 15px; font-weight: 600; color: var(--text); line-height: 1.3; }
+  .fc.accent { background: var(--blue-lt); }
+  .fc.accent .fc-val { color: var(--blue); }
+  .fc.gold-bg { background: #FFF8E8; }
+  .fc.gold-bg .fc-val { color: var(--gold-dk); }
+
+  .ficha-croquis { padding: 16px; border-top: 1px solid var(--gray-2); }
+  .ficha-croquis-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: var(--gray-4); margin-bottom: 10px; text-align: center; }
+  .croquis-svg { width: 100%; max-width: 320px; display: block; margin: 0 auto; }
+
+  .ficha-actions { padding: 14px 16px 18px; display: flex; flex-direction: column; gap: 9px; border-top: 1px solid var(--gray-2); }
+
+  /* ─── DASHBOARD ─── */
+  .dash-tabs {
+    display: flex;
+    background: var(--white);
+    border-bottom: 2px solid var(--gray-2);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .dash-tab {
+    flex: 1; min-width: 80px;
+    padding: 13px 8px;
+    border: none; background: transparent;
+    font-size: 13px; font-weight: 600;
+    color: var(--gray-4); cursor: pointer;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    white-space: nowrap;
+    transition: color .15s, border-color .15s;
+  }
+  .dash-tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+
+  .tab-panel { display: none; flex-direction: column; gap: 14px; padding: 18px 16px; flex: 1; }
+  .tab-panel.active { display: flex; }
+
+  /* stat cards */
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stats-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+  .stat-card {
+    background: var(--white);
+    border-radius: var(--r);
+    padding: 16px 14px;
+    text-align: center;
+  }
+  .stat-card .sc-val { font-size: 30px; font-weight: 800; line-height: 1; color: var(--blue); }
+  .stat-card .sc-pct { font-size: 12px; font-weight: 700; color: var(--gray-4); margin-top: 2px; }
+  .stat-card .sc-label { font-size: 11px; color: var(--gray-4); margin-top: 4px; line-height: 1.3; }
+  .stat-card.gold  .sc-val { color: var(--gold-dk); }
+  .stat-card.teal  .sc-val { color: var(--teal); }
+  .stat-card.coral .sc-val { color: var(--coral); }
+
+  /* progress bar */
+  .prog-card { background: var(--white); border-radius: var(--r); padding: 16px; }
+  .prog-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+  .prog-title  { font-size: 14px; font-weight: 600; }
+  .prog-pct    { font-size: 15px; font-weight: 800; color: var(--teal); }
+  .prog-track  { height: 10px; background: var(--gray-2); border-radius: 5px; overflow: hidden; }
+  .prog-fill   { height: 100%; border-radius: 5px; background: var(--teal); transition: width .5s ease; }
+  .prog-sub    { font-size: 12px; color: var(--gray-4); margin-top: 7px; }
+
+  /* section titles */
+  .sec-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: var(--gray-4); }
+
+  /* stake rows */
+  .stake-list { background: var(--white); border-radius: var(--r); overflow: hidden; }
+  .stake-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--gray-2);
+  }
+  .stake-row:last-child { border-bottom: none; }
+  .stake-num  { width: 22px; font-size: 12px; font-weight: 700; color: var(--gray-3); text-align: right; flex-shrink: 0; }
+  .stake-name { font-size: 13px; font-weight: 600; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .stake-bar-wrap { flex: 2; height: 7px; background: var(--gray-2); border-radius: 4px; overflow: hidden; }
+  .stake-bar  { height: 100%; border-radius: 4px; background: var(--blue); }
+  .stake-count { font-size: 12px; color: var(--gray-4); min-width: 52px; text-align: right; flex-shrink: 0; }
+  .stake-pct  { font-size: 11px; font-weight: 700; min-width: 34px; text-align: right; flex-shrink: 0; }
+
+  /* stock rows */
+  .stock-list { background: var(--white); border-radius: var(--r); overflow: hidden; }
+  .stock-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--gray-2);
+  }
+  .stock-row:last-child { border-bottom: none; }
+  .stock-talla {
+    width: 40px; height: 40px;
+    background: var(--blue-lt); border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 800; color: var(--blue);
+    flex-shrink: 0;
+  }
+  .stock-info { flex: 1; }
+  .stock-info .si-name  { font-size: 13px; font-weight: 600; }
+  .stock-info .si-sub   { font-size: 11px; color: var(--gray-4); margin-top: 2px; }
+  .stock-info .si-bar-wrap { height: 5px; background: var(--gray-2); border-radius: 3px; overflow: hidden; margin-top: 5px; }
+  .stock-info .si-bar   { height: 100%; border-radius: 3px; }
+  .stock-pill {
+    font-size: 10px; font-weight: 700;
+    padding: 3px 9px; border-radius: 20px;
+    white-space: nowrap;
+  }
+  .pill-ok     { background: var(--ok-bg);   color: var(--ok-tx); }
+  .pill-warn   { background: var(--warn-bg); color: var(--warn-tx); }
+  .pill-danger { background: #fde8e8; color: var(--danger); }
+
+  /* login admin */
+  .admin-login { padding: 20px 18px; display: flex; flex-direction: column; gap: 14px; flex: 1; }
+
+  /* ─── UTILS ─── */
+  .divider { height: 1px; background: var(--gray-2); }
+  .spacer  { flex: 1; }
+  .hidden  { display: none !important; }
+
+  @media (max-width: 380px) {
+    .hero-logo { font-size: 48px; }
+    .stats-grid.three .sc-val { font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN: LOGIN
+═══════════════════════════════════════════ -->
+<div id="s-login" class="screen active">
+  <div class="hero">
+    <div class="hero-logo">JAS<span>·</span>2026</div>
+    <div class="hero-tagline">Juventud · Aventura · Servicio</div>
+    <div class="hero-pill">Centro Vacacional Huampaní · 1,200 participantes</div>
+  </div>
+  <div class="login-cards">
+    <p class="login-label">¿Cómo ingresas?</p>
+    <div class="role-card" onclick="go('s-participante-dni')">
+      <div class="role-icon" style="background:#E8F0FC">🙋</div>
+      <div>
+        <h3>Soy participante</h3>
+        <p>Regístrate y obtén tu ficha del evento</p>
+      </div>
+      <span class="role-arrow">›</span>
+    </div>
+    <div class="role-card" onclick="go('s-admin-login')">
+      <div class="role-icon" style="background:#FFF8E1">📊</div>
+      <div>
+        <h3>Soy administrador</h3>
+        <p>Dashboard, estacas y control de stock</p>
+      </div>
+      <span class="role-arrow">›</span>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     SCREEN: PARTICIPANTE — BUSCAR DNI
+═══════════════════════════════════════════ -->
+<div id="s-participante-dni" class="screen">
+  <div class="topbar">
+    <button class="topbar-back" onclick="go('s-login')">‹</button>
+    <h1>Registro de participante</h1>
+  </div>
+  <div class="form-body">
+    <div class="alert alert-info">
+      Ingresa tu número de DNI para encontrar tus datos. Si ya estás en la lista, solo confirmarás tu talla de polo.
+    </div>
+    <div class="field">
+      <label>DNI</label>
+      <input type="number" id="dni-input" placeholder="Ej. 74561234" inputmode="numeric" maxlength="8">
+    </div>
+    <div id="dni-error" class="alert alert-danger hidden">
+      DNI no encontrado. Consulta a tu líder de estaca o al staff del evento.
+    </div>
+    <button class="btn btn-primary" onclick="buscarDNI()">Buscar mis datos →</button>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     SCREEN: PARTICIPANTE — FORMULARIO
+═══════════════════════════════════════════ -->
+<div id="s-participante-form" class="screen">
+  <div class="topbar">
+    <button class="topbar-back" onclick="go('s-participante-dni')">‹</button>
+    <h1>Completa tu registro</h1>
+  </div>
+  <div class="form-body">
+    <div class="alert alert-ok" id="form-bienvenida"></div>
+
+    <div class="field">
+      <label>Talla de polo</label>
+      <select id="f-talla">
+        <option value="">— Selecciona tu talla —</option>
+        <option value="XS">XS</option>
+        <option value="S">S</option>
+        <option value="M">M</option>
+        <option value="L">L</option>
+        <option value="XL">XL</option>
+        <option value="XXL">XXL</option>
+      </select>
+    </div>
+
+    <div id="stock-warn" class="alert alert-warn hidden"></div>
+
+    <div class="field">
+      <label>¿Necesidad especial? <span style="font-weight:400">(opcional)</span></label>
+      <input type="text" id="f-necesidad" placeholder="Ej. alergia, movilidad reducida…">
+    </div>
+
+    <div class="spacer"></div>
+    <button class="btn btn-gold" onclick="confirmarRegistro()">Confirmar y ver mi ficha →</button>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     SCREEN: FICHA DEL PARTICIPANTE
+═══════════════════════════════════════════ -->
+<div id="s-ficha" class="screen">
+  <div class="topbar">
+    <h1>Tu ficha JAS 2026</h1>
+    <span class="topbar-badge">✓ Registrado</span>
+  </div>
+  <div class="ficha-wrap">
+    <div class="ficha">
+      <div class="ficha-header">
+        <h2>JAS<span>·</span>2026</h2>
+        <p>Centro Vacacional Huampaní</p>
+      </div>
+
+      <div class="ficha-nombre">
+        <h3 id="fc-nombre"></h3>
+        <p id="fc-cc"></p>
+      </div>
+
+      <div class="ficha-grid">
+        <div class="fc accent">
+          <div class="fc-label">Estaca</div>
+          <div class="fc-val" id="fc-estaca"></div>
+        </div>
+        <div class="fc accent">
+          <div class="fc-label">N.° de Bus</div>
+          <div class="fc-val" id="fc-bus"></div>
+        </div>
+        <div class="fc">
+          <div class="fc-label">Mesa de recojo</div>
+          <div class="fc-val" id="fc-mesa"></div>
+        </div>
+        <div class="fc">
+          <div class="fc-label">Salón de equipaje</div>
+          <div class="fc-val" id="fc-salon"></div>
+        </div>
+        <div class="fc">
+          <div class="fc-label">Compañía</div>
+          <div class="fc-val" id="fc-compania"></div>
+        </div>
+        <div class="fc gold-bg">
+          <div class="fc-label">Talla de polo</div>
+          <div class="fc-val" id="fc-talla"></div>
+        </div>
+        <div class="fc full">
+          <div class="fc-label">Consejeros</div>
+          <div class="fc-val" id="fc-consejeros"></div>
+        </div>
+        <div class="fc full">
+          <div class="fc-label">Habitación</div>
+          <div class="fc-val" id="fc-habitacion"></div>
+        </div>
+      </div>
+
+      <div class="ficha-croquis">
+        <div class="ficha-croquis-title">Croquis — Centro Vacacional Huampaní</div>
+        <svg class="croquis-svg" viewBox="0 0 320 175" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- fondo -->
+          <rect width="320" height="175" rx="8" fill="#EFF4FF"/>
+          <!-- zonas -->
+          <rect x="12" y="12" width="82" height="50" rx="5" fill="#1B3A6B" fill-opacity=".12" stroke="#1B3A6B" stroke-width="1"/>
+          <text x="53" y="42" font-size="9" fill="#1B3A6B" text-anchor="middle" font-weight="700">INGRESO</text>
+          <rect x="120" y="12" width="90" height="65" rx="5" fill="#0F7B6C" fill-opacity=".18" stroke="#0F7B6C" stroke-width="1"/>
+          <text x="165" y="40" font-size="9" fill="#0F7B6C" text-anchor="middle" font-weight="700">SALONES</text>
+          <text x="165" y="55" font-size="8" fill="#0F7B6C" text-anchor="middle">A · B · C · D</text>
+          <rect x="232" y="12" width="76" height="50" rx="5" fill="#F5A623" fill-opacity=".25" stroke="#C4821A" stroke-width="1"/>
+          <text x="270" y="42" font-size="9" fill="#7B5000" text-anchor="middle" font-weight="700">MESAS</text>
+          <rect x="12" y="90" width="95" height="55" rx="5" fill="#E05C3A" fill-opacity=".14" stroke="#E05C3A" stroke-width="1"/>
+          <text x="59" y="122" font-size="9" fill="#8a2a10" text-anchor="middle" font-weight="700">EQUIPAJE</text>
+          <rect x="125" y="95" width="105" height="50" rx="5" fill="#1B3A6B" fill-opacity=".09" stroke="#1B3A6B" stroke-width="1"/>
+          <text x="177" y="125" font-size="9" fill="#1B3A6B" text-anchor="middle" font-weight="700">HABITACIONES</text>
+          <rect x="248" y="90" width="60" height="38" rx="5" fill="#6C63FF" fill-opacity=".18" stroke="#6C63FF" stroke-width="1"/>
+          <text x="278" y="113" font-size="8" fill="#3a33aa" text-anchor="middle" font-weight="700">SS.HH.</text>
+          <!-- paths -->
+          <line x1="94" y1="37" x2="120" y2="37" stroke="#1B3A6B" stroke-width="1.5" stroke-dasharray="3,2"/>
+          <polygon points="116,34 120,37 116,40" fill="#1B3A6B"/>
+          <line x1="210" y1="44" x2="232" y2="44" stroke="#1B3A6B" stroke-width="1.5" stroke-dasharray="3,2"/>
+          <polygon points="228,41 232,44 228,47" fill="#1B3A6B"/>
+          <!-- leyenda -->
+          <rect x="12" y="155" width="9" height="9" rx="2" fill="#1B3A6B" fill-opacity=".5"/>
+          <text x="24" y="163" font-size="8" fill="#555">Ingreso</text>
+          <rect x="70" y="155" width="9" height="9" rx="2" fill="#0F7B6C" fill-opacity=".5"/>
+          <text x="82" y="163" font-size="8" fill="#555">Salones</text>
+          <rect x="135" y="155" width="9" height="9" rx="2" fill="#F5A623" fill-opacity=".7"/>
+          <text x="147" y="163" font-size="8" fill="#555">Mesas</text>
+          <rect x="195" y="155" width="9" height="9" rx="2" fill="#E05C3A" fill-opacity=".5"/>
+          <text x="207" y="163" font-size="8" fill="#555">Equipaje</text>
+          <rect x="255" y="155" width="9" height="9" rx="2" fill="#1B3A6B" fill-opacity=".3"/>
+          <text x="267" y="163" font-size="8" fill="#555">Habitaciones</text>
+        </svg>
+      </div>
+
+      <div class="ficha-actions">
+        <button class="btn btn-primary" onclick="descargarFicha()">⬇ Guardar ficha</button>
+        <button class="btn btn-outline" onclick="go('s-login')" style="margin-top:2px">← Volver al inicio</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     SCREEN: ADMIN — LOGIN
+═══════════════════════════════════════════ -->
+<div id="s-admin-login" class="screen">
+  <div class="topbar">
+    <button class="topbar-back" onclick="go('s-login')">‹</button>
+    <h1>Acceso administrador</h1>
+  </div>
+  <div class="admin-login">
+    <div class="alert alert-warn">Solo personal autorizado del evento JAS 2026.</div>
+    <div class="field">
+      <label>Usuario</label>
+      <input type="text" id="admin-user" placeholder="admin">
+    </div>
+    <div class="field">
+      <label>Contraseña</label>
+      <input type="password" id="admin-pass" placeholder="••••••">
+    </div>
+    <div id="admin-error" class="alert alert-danger hidden">Usuario o contraseña incorrectos.</div>
+    <div class="spacer"></div>
+    <button class="btn btn-primary" onclick="adminLogin()">Ingresar al dashboard →</button>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     SCREEN: ADMIN — DASHBOARD
+═══════════════════════════════════════════ -->
+<div id="s-admin" class="screen">
+  <div class="topbar">
+    <button class="topbar-back" onclick="go('s-login')">‹</button>
+    <h1>Dashboard JAS 2026</h1>
+    <span class="topbar-badge">Admin</span>
+  </div>
+
+  <div class="dash-tabs">
+    <button class="dash-tab active" onclick="switchTab(this,'tab-general')">General</button>
+    <button class="dash-tab" onclick="switchTab(this,'tab-estacas')">Estacas</button>
+    <button class="dash-tab" onclick="switchTab(this,'tab-stock')">Stock</button>
+  </div>
+
+  <!-- ── TAB: GENERAL ── -->
+  <div id="tab-general" class="tab-panel active">
+
+    <div class="stats-grid three">
+      <div class="stat-card">
+        <div class="sc-val">1,200</div>
+        <div class="sc-label">Total inscritos</div>
+      </div>
+      <div class="stat-card teal">
+        <div class="sc-val">847</div>
+        <div class="sc-pct">70.6%</div>
+        <div class="sc-label">Registrados</div>
+      </div>
+      <div class="stat-card gold">
+        <div class="sc-val">353</div>
+        <div class="sc-pct">29.4%</div>
+        <div class="sc-label">Pendientes</div>
+      </div>
+    </div>
+
+    <div class="prog-card">
+      <div class="prog-header">
+        <span class="prog-title">Avance de registro</span>
+        <span class="prog-pct">70.6%</span>
+      </div>
+      <div class="prog-track">
+        <div class="prog-fill" style="width:70.6%"></div>
+      </div>
+      <div class="prog-sub">847 de 1,200 participantes completaron su registro · 20 estacas</div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="sc-val" style="font-size:24px">24</div>
+        <div class="sc-label">Buses asignados</div>
+      </div>
+      <div class="stat-card coral">
+        <div class="sc-val" style="font-size:24px">3</div>
+        <div class="sc-label">Tallas con alerta de stock</div>
+      </div>
+    </div>
+
+    <button class="btn btn-outline" onclick="alert('En la versión conectada a Supabase: exporta CSV con todos los registros.')">
+      📥 Exportar informe completo
+    </button>
+  </div>
+
+  <!-- ── TAB: ESTACAS ── -->
+  <div id="tab-estacas" class="tab-panel">
+    <p class="sec-title">Registro por estaca — 20 estacas · 1,200 participantes</p>
+
+    <div class="prog-card">
+      <div class="prog-header">
+        <span class="prog-title">Progreso global</span>
+        <span class="prog-pct">70.6%</span>
+      </div>
+      <div class="prog-track">
+        <div class="prog-fill" style="width:70.6%"></div>
+      </div>
+      <div class="prog-sub">847 registrados · 353 pendientes</div>
+    </div>
+
+    <div class="stake-list" id="stake-list"></div>
+
+    <button class="btn btn-outline" onclick="alert('En la versión conectada: exporta detalle por estaca.')">
+      📥 Exportar por estaca
+    </button>
+  </div>
+
+  <!-- ── TAB: STOCK ── -->
+  <div id="tab-stock" class="tab-panel">
+    <p class="sec-title">Stock de polos — control por talla</p>
+
+    <div class="stats-grid three">
+      <div class="stat-card teal">
+        <div class="sc-val" style="font-size:24px">3</div>
+        <div class="sc-label">Tallas OK</div>
+      </div>
+      <div class="stat-card gold">
+        <div class="sc-val" style="font-size:24px">2</div>
+        <div class="sc-label">Stock bajo</div>
+      </div>
+      <div class="stat-card coral">
+        <div class="sc-val" style="font-size:24px">1</div>
+        <div class="sc-label">Sin stock</div>
+      </div>
+    </div>
+
+    <div class="stock-list" id="stock-list"></div>
+
+    <div class="alert alert-warn">
+      ⚠ Talla XL sin stock — 13 participantes sin talla asignada. Coordinar reposición antes del evento.
+    </div>
+
+    <button class="btn btn-outline" onclick="alert('En la versión conectada: exporta reporte de stock.')">
+      📥 Exportar stock
+    </button>
+  </div>
+
+</div><!-- /s-admin -->
+
+
+<script>
+// ════════════════════════════════════════
+// DATOS DEMO (en producción: llamadas a Supabase)
+// ════════════════════════════════════════
+const PARTICIPANTES = {
+  '74561234': { nombre:'María Castillo Ríos',    cc:'CC Lima Norte',     estaca:'Villa Salvador',        bus:'Bus 7',  mesa:'Mesa B', salon:'Salón 2', compania:'Compañía Águila',  consejeros:'Hna. Torres / Hno. Ramírez',  habitacion:'Hab. 214 — Pabellón A' },
+  '76234891': { nombre:'José Luis Mamani Quispe',cc:'CC San Juan de M.', estaca:'San Juan de Miraflores',bus:'Bus 12', mesa:'Mesa A', salon:'Salón 1', compania:'Compañía León',    consejeros:'Hno. Pacheco / Hna. Flores',  habitacion:'Hab. 108 — Pabellón B' },
+  '73910234': { nombre:'Ana Sofía Palomino Vera', cc:'CC Surco',          estaca:'Surco',                 bus:'Bus 3',  mesa:'Mesa C', salon:'Salón 3', compania:'Compañía Cóndor',  consejeros:'Hna. Vega / Hno. Castro',     habitacion:'Hab. 305 — Pabellón C' },
+  '00000000': { nombre:'Demo Participante',        cc:'CC Demo',           estaca:'Estaca Demo',           bus:'Bus 1',  mesa:'Mesa A', salon:'Salón 1', compania:'Compañía Demo',    consejeros:'Hno. Demo / Hna. Demo',       habitacion:'Hab. 101 — Pabellón A' },
+};
+
+const ESTACAS = [
+  { nombre:'Villa Salvador',        total:80, registrados:76 },
+  { nombre:'San Juan de Miraflores',total:75, registrados:68 },
+  { nombre:'Chorrillos',            total:70, registrados:57 },
+  { nombre:'Surco',                 total:65, registrados:52 },
+  { nombre:'La Molina',             total:60, registrados:44 },
+  { nombre:'Miraflores',            total:60, registrados:50 },
+  { nombre:'Ate',                   total:55, registrados:40 },
+  { nombre:'San Borja',             total:55, registrados:48 },
+  { nombre:'Breña',                 total:50, registrados:38 },
+  { nombre:'Los Olivos',            total:50, registrados:35 },
+  { nombre:'Comas',                 total:50, registrados:32 },
+  { nombre:'San Martín de Porres',  total:50, registrados:29 },
+  { nombre:'Callao',                total:45, registrados:36 },
+  { nombre:'Independencia',         total:45, registrados:30 },
+  { nombre:'El Agustino',           total:40, registrados:28 },
+  { nombre:'Santa Anita',           total:40, registrados:25 },
+  { nombre:'Lurigancho',            total:35, registrados:22 },
+  { nombre:'Carabayllo',            total:35, registrados:20 },
+  { nombre:'Puente Piedra',         total:30, registrados:17 },
+  { nombre:'Ventanilla',            total:30, registrados:16 },
+];
+
+const STOCK = [
+  { talla:'XS',  solicitados:28,  disponibles:50  },
+  { talla:'S',   solicitados:187, disponibles:200 },
+  { talla:'M',   solicitados:224, disponibles:230 },
+  { talla:'L',   solicitados:198, disponibles:200 },
+  { talla:'XL',  solicitados:143, disponibles:130 },
+  { talla:'XXL', solicitados:67,  disponibles:80  },
+];
+
+// ════════════════════════════════════════
+// ESTADO
+// ════════════════════════════════════════
+let currentParticipante = null;
+
+// ════════════════════════════════════════
+// NAVEGACIÓN
+// ════════════════════════════════════════
+function go(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function switchTab(btn, panelId) {
+  document.querySelectorAll('.dash-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(panelId).classList.add('active');
+}
+
+// ════════════════════════════════════════
+// PARTICIPANTE
+// ════════════════════════════════════════
+function buscarDNI() {
+  const dni = document.getElementById('dni-input').value.trim();
+  const errEl = document.getElementById('dni-error');
+  errEl.classList.add('hidden');
+
+  if (dni.length < 8) {
+    errEl.textContent = 'Ingresa un DNI válido de 8 dígitos.';
+    errEl.classList.remove('hidden');
+    return;
+  }
+
+  const p = PARTICIPANTES[dni];
+  if (!p) {
+    errEl.textContent = 'DNI no encontrado. Consulta a tu líder de estaca o al staff del evento.';
+    errEl.classList.remove('hidden');
+    return;
+  }
+
+  currentParticipante = { ...p, dni };
+  document.getElementById('form-bienvenida').textContent =
+    '¡Hola, ' + p.nombre.split(' ')[0] + '! Encontramos tus datos. Solo confirma tu talla de polo para completar el registro.';
+  document.getElementById('f-talla').value = '';
+  document.getElementById('stock-warn').classList.add('hidden');
+  go('s-participante-form');
+}
+
+document.getElementById('f-talla').addEventListener('change', function() {
+  const warnEl = document.getElementById('stock-warn');
+  const talla = this.value;
+  const s = STOCK.find(x => x.talla === talla);
+  if (s && s.disponibles <= s.solicitados) {
+    warnEl.textContent = '⚠ La talla ' + talla + ' tiene stock limitado. Si no hay disponibilidad al momento de recoger, recibirás la talla más cercana.';
+    warnEl.classList.remove('hidden');
+  } else {
+    warnEl.classList.add('hidden');
+  }
+});
+
+function confirmarRegistro() {
+  const talla = document.getElementById('f-talla').value;
+  if (!talla) {
+    alert('Por favor selecciona tu talla de polo.');
+    return;
+  }
+  currentParticipante.talla = talla;
+
+  document.getElementById('fc-nombre').textContent      = currentParticipante.nombre;
+  document.getElementById('fc-cc').textContent          = currentParticipante.cc;
+  document.getElementById('fc-estaca').textContent      = currentParticipante.estaca;
+  document.getElementById('fc-bus').textContent         = currentParticipante.bus;
+  document.getElementById('fc-mesa').textContent        = currentParticipante.mesa;
+  document.getElementById('fc-salon').textContent       = currentParticipante.salon;
+  document.getElementById('fc-compania').textContent    = currentParticipante.compania;
+  document.getElementById('fc-talla').textContent       = talla;
+  document.getElementById('fc-consejeros').textContent  = currentParticipante.consejeros;
+  document.getElementById('fc-habitacion').textContent  = currentParticipante.habitacion;
+
+  go('s-ficha');
+}
+
+function descargarFicha() {
+  alert('En la versión conectada a Supabase: guarda la ficha como imagen PNG o PDF directamente en tu galería o Downloads.');
+}
+
+document.getElementById('dni-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') buscarDNI();
+});
+
+// ════════════════════════════════════════
+// ADMIN
+// ════════════════════════════════════════
+function adminLogin() {
+  const user = document.getElementById('admin-user').value.trim();
+  const pass = document.getElementById('admin-pass').value;
+  const errEl = document.getElementById('admin-error');
+  errEl.classList.add('hidden');
+
+  // En producción: validar contra Supabase Auth
+  if (user === 'admin' && pass === 'jas2026') {
+    renderDashboard();
+    go('s-admin');
+  } else {
+    errEl.classList.remove('hidden');
+  }
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('s-admin-login').classList.contains('active')) {
+    adminLogin();
+  }
+});
+
+// ════════════════════════════════════════
+// RENDER DASHBOARD
+// ════════════════════════════════════════
+function renderDashboard() {
+  renderStakes();
+  renderStock();
+}
+
+function renderStakes() {
+  const container = document.getElementById('stake-list');
+  container.innerHTML = ESTACAS.map((e, i) => {
+    const pct = Math.round((e.registrados / e.total) * 100);
+    const pendientes = e.total - e.registrados;
+    let barColor = '#0F7B6C';
+    if (pct < 60) barColor = '#E05C3A';
+    else if (pct < 80) barColor = '#C4821A';
+    return `
+      <div class="stake-row">
+        <span class="stake-num">${i + 1}</span>
+        <span class="stake-name">${e.nombre}</span>
+        <div class="stake-bar-wrap">
+          <div class="stake-bar" style="width:${pct}%;background:${barColor}"></div>
+        </div>
+        <span class="stake-count">${e.registrados}/${e.total}</span>
+        <span class="stake-pct" style="color:${barColor}">${pct}%</span>
+      </div>`;
+  }).join('');
+}
+
+function renderStock() {
+  const container = document.getElementById('stock-list');
+  container.innerHTML = STOCK.map(s => {
+    const pct = Math.min(100, Math.round((s.solicitados / s.disponibles) * 100));
+    const restante = s.disponibles - s.solicitados;
+    let pill, barColor;
+    if (restante > 10)       { pill = '<span class="stock-pill pill-ok">OK</span>';          barColor = '#0F7B6C'; }
+    else if (restante >= 0)  { pill = '<span class="stock-pill pill-warn">⚠ Stock bajo</span>'; barColor = '#C4821A'; }
+    else                     { pill = '<span class="stock-pill pill-danger">🔴 Sin stock</span>'; barColor = '#C0392B'; }
+
+    return `
+      <div class="stock-row">
+        <div class="stock-talla">${s.talla}</div>
+        <div class="stock-info">
+          <div class="si-name">Talla ${s.talla}</div>
+          <div class="si-sub">Solicitados: ${s.solicitados} · Disponibles: ${s.disponibles} · Restante: ${restante}</div>
+          <div class="si-bar-wrap">
+            <div class="si-bar" style="width:${pct}%;background:${barColor}"></div>
+          </div>
+        </div>
+        ${pill}
+      </div>`;
+  }).join('');
+}
+</script>
+</body>
+</html>
