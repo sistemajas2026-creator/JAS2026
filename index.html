@@ -686,19 +686,11 @@ async function buscarDNI() {
     document.getElementById('pf-cc').textContent     = p.cc;
     document.getElementById('pf-estaca').textContent = p.estaca;
 
-    // Banner si ya está registrado
-    const banner = document.getElementById('ya-registrado-banner');
-    const btnVerFicha = document.getElementById('btn-ver-ficha');
-    const btnConfirmar = document.getElementById('btn-confirmar');
-
+    // Si ya está registrado → ir directo a la ficha sin pasar por el formulario
     if (p.registrado) {
-      banner.classList.remove('hidden');
-      btnVerFicha.style.display = 'block';
-      btnConfirmar.textContent = 'Actualizar registro →';
-    } else {
-      banner.classList.add('hidden');
-      btnVerFicha.style.display = 'none';
-      btnConfirmar.textContent = 'Confirmar y ver mi ficha →';
+      rellenarFicha(p);
+      go('s-ficha');
+      return;
     }
 
     // Preseleccionar bus si ya lo eligió antes
@@ -887,33 +879,34 @@ async function descargarPDF() {
   btn.disabled = true;
 
   try {
-    // Ensure libraries are loaded
     if (typeof html2canvas === 'undefined' || typeof window.jspdf === 'undefined') {
       throw new Error('Librerías PDF no cargadas. Reintenta en un momento.');
     }
     const { jsPDF } = window.jspdf;
 
+    // Ocultar los botones de acción antes de capturar
+    const actionsEl = document.querySelector('#s-ficha .ficha-actions');
+    actionsEl.style.display = 'none';
+
     const fichaEl = document.querySelector('#s-ficha .ficha');
     const canvas = await html2canvas(fichaEl, {
-      scale: 2,
+      scale: 3,
       useCORS: true,
       backgroundColor: '#ffffff',
       logging: false,
     });
 
-    const imgData = canvas.toDataURL('image/jpeg', 0.92);
-    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-    const pageW = pdf.internal.pageSize.getWidth();
-    const pageH = pdf.internal.pageSize.getHeight();
+    // Restaurar botones
+    actionsEl.style.display = '';
 
-    // Scale image to fit A4 width with margins
-    const margin = 10;
-    const usableW = pageW - margin * 2;
-    const canvasAspect = canvas.height / canvas.width;
-    const imgH = usableW * canvasAspect;
-    const yOffset = Math.max(margin, (pageH - imgH) / 2);
+    const imgData = canvas.toDataURL('image/png');
+    // Tamaño PDF igual al tamaño de la ficha (no A4 forzado)
+    const pxToMm = 0.264583;
+    const pdfW = canvas.width  / 3 * pxToMm;
+    const pdfH = canvas.height / 3 * pxToMm;
 
-    pdf.addImage(imgData, 'JPEG', margin, yOffset, usableW, Math.min(imgH, pageH - margin * 2));
+    const pdf = new jsPDF({ orientation: pdfH > pdfW ? 'portrait' : 'landscape', unit: 'mm', format: [pdfW, pdfH] });
+    pdf.addImage(imgData, 'PNG', 0, 0, pdfW, pdfH);
 
     const nombre = (currentParticipante?.nombre || 'ficha').toLowerCase().replace(/\s+/g, '_');
     pdf.save(`ficha_jas2026_${nombre}.pdf`);
@@ -929,14 +922,20 @@ function compartirWhatsApp() {
   const p = currentParticipante;
   if (!p) return;
   const texto = [
-    `✅ *Ficha JAS 2026 — Centro Vacacional Huampaní*`,
+    `¡Tu registro para la Conferencia JAS 2026 ha sido confirmado!`,
+    ``,
     `👤 *${p.nombre}*`,
     `🏛 ${p.estaca} · ${p.cc}`,
-    `🚌 *Bus:* ${p.bus || '—'}   🍽 *Mesa:* ${p.mesa || '—'}`,
+    ``,
+    `🚌 *Bus:* ${p.bus || '—'}`,
+    `🍽 *Mesa de recojo:* ${p.mesa || '—'}`,
     `🎽 *Talla polo:* ${p.talla_polo || '—'}`,
     `🏠 *Habitación:* ${p.habitacion || '—'}`,
     `👥 *Consejeros:* ${p.consejeros || '—'}`,
-    `📦 *Salón equipaje:* ${p.salon || '—'}   🏢 *Compañía:* ${p.compania || '—'}`,
+    `📦 *Salón equipaje:* ${p.salon || '—'}`,
+    `🏢 *Compañía:* ${p.compania || '—'}`,
+    ``,
+    `_Centro Vacacional Huampaní_`,
   ].join('\n');
   const url = 'https://wa.me/?text=' + encodeURIComponent(texto);
   window.open(url, '_blank');
