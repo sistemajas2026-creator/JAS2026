@@ -573,7 +573,7 @@
       </div>
     </div>
 
-    <button class="btn btn-outline" onclick="alert('En la versión conectada a Supabase: exporta CSV con todos los registros.')">
+    <button class="btn btn-outline" onclick="exportarCSV()">
       📥 Exportar informe completo
     </button>
   </div>
@@ -595,7 +595,7 @@
 
     <div class="stake-list" id="stake-list"></div>
 
-    <button class="btn btn-outline" onclick="alert('En la versión conectada: exporta detalle por estaca.')">
+    <button class="btn btn-outline" onclick="exportarCSV('estacas')">
       📥 Exportar por estaca
     </button>
   </div>
@@ -625,7 +625,7 @@
       ⚠ Talla XL sin stock — 13 participantes sin talla asignada. Coordinar reposición antes del evento.
     </div>
 
-    <button class="btn btn-outline" onclick="alert('En la versión conectada: exporta reporte de stock.')">
+    <button class="btn btn-outline" onclick="exportarCSV('stock')">
       📥 Exportar stock
     </button>
   </div>
@@ -635,46 +635,29 @@
 
 <script>
 // ════════════════════════════════════════
-// DATOS DEMO (en producción: llamadas a Supabase)
+// SUPABASE CONFIG
 // ════════════════════════════════════════
-const PARTICIPANTES = {
-  '74561234': { nombre:'María Castillo Ríos',    cc:'CC Lima Norte',     estaca:'Villa Salvador',        bus:'Bus 7',  mesa:'Mesa B', salon:'Salón 2', compania:'Compañía Águila',  consejeros:'Hna. Torres / Hno. Ramírez',  habitacion:'Hab. 214 — Pabellón A' },
-  '76234891': { nombre:'José Luis Mamani Quispe',cc:'CC San Juan de M.', estaca:'San Juan de Miraflores',bus:'Bus 12', mesa:'Mesa A', salon:'Salón 1', compania:'Compañía León',    consejeros:'Hno. Pacheco / Hna. Flores',  habitacion:'Hab. 108 — Pabellón B' },
-  '73910234': { nombre:'Ana Sofía Palomino Vera', cc:'CC Surco',          estaca:'Surco',                 bus:'Bus 3',  mesa:'Mesa C', salon:'Salón 3', compania:'Compañía Cóndor',  consejeros:'Hna. Vega / Hno. Castro',     habitacion:'Hab. 305 — Pabellón C' },
-  '00000000': { nombre:'Demo Participante',        cc:'CC Demo',           estaca:'Estaca Demo',           bus:'Bus 1',  mesa:'Mesa A', salon:'Salón 1', compania:'Compañía Demo',    consejeros:'Hno. Demo / Hna. Demo',       habitacion:'Hab. 101 — Pabellón A' },
-};
+const SUPABASE_URL = 'https://nhrvwzmnkfbbgntfggwu.supabase.co';
+const SUPABASE_KEY = 'sb_secret_sUGNPICmpoXBj1DMI9M3HA_AJ6ToZg9';
 
-const ESTACAS = [
-  { nombre:'Villa Salvador',        total:80, registrados:76 },
-  { nombre:'San Juan de Miraflores',total:75, registrados:68 },
-  { nombre:'Chorrillos',            total:70, registrados:57 },
-  { nombre:'Surco',                 total:65, registrados:52 },
-  { nombre:'La Molina',             total:60, registrados:44 },
-  { nombre:'Miraflores',            total:60, registrados:50 },
-  { nombre:'Ate',                   total:55, registrados:40 },
-  { nombre:'San Borja',             total:55, registrados:48 },
-  { nombre:'Breña',                 total:50, registrados:38 },
-  { nombre:'Los Olivos',            total:50, registrados:35 },
-  { nombre:'Comas',                 total:50, registrados:32 },
-  { nombre:'San Martín de Porres',  total:50, registrados:29 },
-  { nombre:'Callao',                total:45, registrados:36 },
-  { nombre:'Independencia',         total:45, registrados:30 },
-  { nombre:'El Agustino',           total:40, registrados:28 },
-  { nombre:'Santa Anita',           total:40, registrados:25 },
-  { nombre:'Lurigancho',            total:35, registrados:22 },
-  { nombre:'Carabayllo',            total:35, registrados:20 },
-  { nombre:'Puente Piedra',         total:30, registrados:17 },
-  { nombre:'Ventanilla',            total:30, registrados:16 },
-];
-
-const STOCK = [
-  { talla:'XS',  solicitados:28,  disponibles:50  },
-  { talla:'S',   solicitados:187, disponibles:200 },
-  { talla:'M',   solicitados:224, disponibles:230 },
-  { talla:'L',   solicitados:198, disponibles:200 },
-  { talla:'XL',  solicitados:143, disponibles:130 },
-  { talla:'XXL', solicitados:67,  disponibles:80  },
-];
+async function sbFetch(path, options = {}) {
+  const res = await fetch(SUPABASE_URL + path, {
+    ...options,
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': options.prefer || '',
+      ...(options.headers || {}),
+    },
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || 'Error ' + res.status);
+  }
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+}
 
 // ════════════════════════════════════════
 // ESTADO
@@ -700,9 +683,10 @@ function switchTab(btn, panelId) {
 // ════════════════════════════════════════
 // PARTICIPANTE
 // ════════════════════════════════════════
-function buscarDNI() {
+async function buscarDNI() {
   const dni = document.getElementById('dni-input').value.trim();
   const errEl = document.getElementById('dni-error');
+  const btn = document.querySelector('#s-participante-dni .btn-primary');
   errEl.classList.add('hidden');
 
   if (dni.length < 8) {
@@ -711,19 +695,37 @@ function buscarDNI() {
     return;
   }
 
-  const p = PARTICIPANTES[dni];
-  if (!p) {
-    errEl.textContent = 'DNI no encontrado. Consulta a tu líder de estaca o al staff del evento.';
-    errEl.classList.remove('hidden');
-    return;
-  }
+  btn.textContent = 'Buscando…';
+  btn.disabled = true;
 
-  currentParticipante = { ...p, dni };
-  document.getElementById('form-bienvenida').textContent =
-    '¡Hola, ' + p.nombre.split(' ')[0] + '! Encontramos tus datos. Solo confirma tu talla de polo para completar el registro.';
-  document.getElementById('f-talla').value = '';
-  document.getElementById('stock-warn').classList.add('hidden');
-  go('s-participante-form');
+  try {
+    const data = await sbFetch(
+      `/rest/v1/participantes?dni=eq.${encodeURIComponent(dni)}&limit=1`
+    );
+
+    if (!data || data.length === 0) {
+      errEl.textContent = 'DNI no encontrado. Consulta a tu líder de estaca o al staff del evento.';
+      errEl.classList.remove('hidden');
+      return;
+    }
+
+    const p = data[0];
+    currentParticipante = p;
+
+    document.getElementById('form-bienvenida').textContent =
+      '¡Hola, ' + p.nombre.split(' ')[0] + '! Encontramos tus datos. Solo confirma tu talla de polo para completar el registro.';
+    document.getElementById('f-talla').value = p.talla || '';
+    document.getElementById('f-necesidad').value = p.necesidad || '';
+    document.getElementById('stock-warn').classList.add('hidden');
+    go('s-participante-form');
+
+  } catch (e) {
+    errEl.textContent = 'Error de conexión: ' + e.message;
+    errEl.classList.remove('hidden');
+  } finally {
+    btn.textContent = 'Buscar mis datos →';
+    btn.disabled = false;
+  }
 }
 
 document.getElementById('f-talla').addEventListener('change', function() {
@@ -738,53 +740,137 @@ document.getElementById('f-talla').addEventListener('change', function() {
   }
 });
 
-function confirmarRegistro() {
+async function confirmarRegistro() {
   const talla = document.getElementById('f-talla').value;
+  const necesidad = document.getElementById('f-necesidad').value.trim();
+  const btn = document.querySelector('#s-participante-form .btn-gold');
+
   if (!talla) {
     alert('Por favor selecciona tu talla de polo.');
     return;
   }
-  currentParticipante.talla = talla;
 
-  document.getElementById('fc-nombre').textContent      = currentParticipante.nombre;
-  document.getElementById('fc-cc').textContent          = currentParticipante.cc;
-  document.getElementById('fc-estaca').textContent      = currentParticipante.estaca;
-  document.getElementById('fc-bus').textContent         = currentParticipante.bus;
-  document.getElementById('fc-mesa').textContent        = currentParticipante.mesa;
-  document.getElementById('fc-salon').textContent       = currentParticipante.salon;
-  document.getElementById('fc-compania').textContent    = currentParticipante.compania;
-  document.getElementById('fc-talla').textContent       = talla;
-  document.getElementById('fc-consejeros').textContent  = currentParticipante.consejeros;
-  document.getElementById('fc-habitacion').textContent  = currentParticipante.habitacion;
+  btn.textContent = 'Guardando…';
+  btn.disabled = true;
 
-  go('s-ficha');
+  try {
+    // Guardar talla (y necesidad si existe) en Supabase
+    await sbFetch(
+      `/rest/v1/participantes?dni=eq.${encodeURIComponent(currentParticipante.dni)}`,
+      {
+        method: 'PATCH',
+        prefer: 'return=minimal',
+        body: JSON.stringify({
+          talla,
+          ...(necesidad ? { necesidad } : {}),
+          registrado: true,
+        }),
+      }
+    );
+
+    currentParticipante.talla    = talla;
+    currentParticipante.necesidad = necesidad;
+
+    // Rellenar ficha
+    document.getElementById('fc-nombre').textContent     = currentParticipante.nombre;
+    document.getElementById('fc-cc').textContent         = currentParticipante.cc;
+    document.getElementById('fc-estaca').textContent     = currentParticipante.estaca;
+    document.getElementById('fc-bus').textContent        = currentParticipante.bus;
+    document.getElementById('fc-mesa').textContent       = currentParticipante.mesa;
+    document.getElementById('fc-salon').textContent      = currentParticipante.salon;
+    document.getElementById('fc-compania').textContent   = currentParticipante.compania;
+    document.getElementById('fc-talla').textContent      = talla;
+    document.getElementById('fc-consejeros').textContent = currentParticipante.consejeros;
+    document.getElementById('fc-habitacion').textContent = currentParticipante.habitacion;
+
+    go('s-ficha');
+
+  } catch (e) {
+    alert('No se pudo guardar: ' + e.message);
+  } finally {
+    btn.textContent = 'Confirmar y ver mi ficha →';
+    btn.disabled = false;
+  }
 }
 
 function descargarFicha() {
-  alert('En la versión conectada a Supabase: guarda la ficha como imagen PNG o PDF directamente en tu galería o Downloads.');
+  alert('Para guardar tu ficha: usa el menú del navegador → "Compartir" → "Agregar a pantalla de inicio" (iOS) o toma una captura de pantalla.');
+}
+
+
+
+async function adminLogin() {
+  const user = document.getElementById('admin-user').value.trim();
+  const pass = document.getElementById('admin-pass').value;
+  const errEl = document.getElementById('admin-error');
+  const btn = document.querySelector('#s-admin-login .btn-primary');
+  errEl.classList.add('hidden');
+
+  btn.textContent = 'Verificando…';
+  btn.disabled = true;
+
+  try {
+    // Autenticar con Supabase Auth (email/password)
+    const res = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=password', {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email: user, password: pass }),
+    });
+
+    if (!res.ok) throw new Error('credenciales');
+
+    await renderDashboard();
+    go('s-admin');
+
+  } catch (e) {
+    errEl.classList.remove('hidden');
+  } finally {
+    btn.textContent = 'Ingresar al dashboard →';
+    btn.disabled = false;
+  }
+}
+
+// ════════════════════════════════════════
+// EXPORTAR CSV
+// ════════════════════════════════════════
+async function exportarCSV(modo) {
+  try {
+    let data, filename, headers, rows;
+
+    if (modo === 'stock') {
+      const pedidos = await sbFetch('/rest/v1/participantes?select=talla&talla=not.is.null');
+      const solMap = {};
+      (pedidos || []).forEach(p => { solMap[p.talla] = (solMap[p.talla] || 0) + 1; });
+      headers = ['Talla','Solicitados'];
+      rows = ['XS','S','M','L','XL','XXL'].map(t => [t, solMap[t] || 0]);
+      filename = 'stock_tallas_jas2026.csv';
+    } else {
+      const fields = modo === 'estacas'
+        ? 'estaca,registrado'
+        : 'dni,nombre,cc,estaca,bus,mesa,salon,compania,talla,consejeros,habitacion,registrado,necesidad';
+      data = await sbFetch(`/rest/v1/participantes?select=${fields}`);
+      headers = Object.keys(data[0] || {});
+      rows = data.map(r => headers.map(h => r[h] ?? ''));
+      filename = modo === 'estacas' ? 'estacas_jas2026.csv' : 'participantes_jas2026.csv';
+    }
+
+    const csv = [headers, ...rows].map(r => r.map(v => '"' + String(v).replace(/"/g,'""') + '"').join(',')).join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename; a.click();
+    URL.revokeObjectURL(url);
+  } catch (e) {
+    alert('Error al exportar: ' + e.message);
+  }
 }
 
 document.getElementById('dni-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') buscarDNI();
 });
-
-// ════════════════════════════════════════
-// ADMIN
-// ════════════════════════════════════════
-function adminLogin() {
-  const user = document.getElementById('admin-user').value.trim();
-  const pass = document.getElementById('admin-pass').value;
-  const errEl = document.getElementById('admin-error');
-  errEl.classList.add('hidden');
-
-  // En producción: validar contra Supabase Auth
-  if (user === 'admin' && pass === 'jas2026') {
-    renderDashboard();
-    go('s-admin');
-  } else {
-    errEl.classList.remove('hidden');
-  }
-}
 
 document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && document.getElementById('s-admin-login').classList.contains('active')) {
@@ -793,57 +879,186 @@ document.addEventListener('keydown', e => {
 });
 
 // ════════════════════════════════════════
-// RENDER DASHBOARD
+// RENDER DASHBOARD (datos desde Supabase)
 // ════════════════════════════════════════
-function renderDashboard() {
-  renderStakes();
-  renderStock();
+async function renderDashboard() {
+  try {
+    await Promise.all([renderGeneralStats(), renderStakes(), renderStock()]);
+  } catch (e) {
+    console.error('Dashboard error:', e);
+  }
 }
 
-function renderStakes() {
+async function renderGeneralStats() {
+  // Total inscritos
+  const total = await sbFetch('/rest/v1/participantes?select=count', { headers: { 'Prefer': 'count=exact', 'Range': '0-0' } })
+    .catch(() => null);
+
+  // Registrados (talla confirmada)
+  const regData = await sbFetch('/rest/v1/participantes?registrado=eq.true&select=count', { headers: { 'Prefer': 'count=exact', 'Range': '0-0' } })
+    .catch(() => null);
+
+  // Leer headers para obtener conteos reales
+  const [totalRes, regRes] = await Promise.all([
+    fetch(SUPABASE_URL + '/rest/v1/participantes?select=count', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'count=exact', 'Range': '0-0' }
+    }),
+    fetch(SUPABASE_URL + '/rest/v1/participantes?registrado=eq.true&select=count', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'count=exact', 'Range': '0-0' }
+    }),
+  ]);
+
+  const totalCount = parseInt(totalRes.headers.get('content-range')?.split('/')[1] || '0');
+  const regCount   = parseInt(regRes.headers.get('content-range')?.split('/')[1] || '0');
+  const pendCount  = totalCount - regCount;
+  const pct        = totalCount ? Math.round((regCount / totalCount) * 100) : 0;
+
+  // Actualizar stat cards
+  const cards = document.querySelectorAll('#tab-general .stat-card .sc-val');
+  if (cards[0]) cards[0].textContent = totalCount.toLocaleString('es-PE');
+  if (cards[1]) cards[1].textContent = regCount.toLocaleString('es-PE');
+  if (cards[2]) cards[2].textContent = pendCount.toLocaleString('es-PE');
+
+  // Actualizar porcentajes
+  const pcts = document.querySelectorAll('#tab-general .stat-card .sc-pct');
+  if (pcts[0]) pcts[0].textContent = pct + '%';
+  if (pcts[1]) pcts[1].textContent = (100 - pct) + '%';
+
+  // Actualizar barra de progreso en tab-general
+  const fills = document.querySelectorAll('#tab-general .prog-fill');
+  const ptxts = document.querySelectorAll('#tab-general .prog-pct');
+  const psubs = document.querySelectorAll('#tab-general .prog-sub');
+  fills.forEach(f => f.style.width = pct + '%');
+  ptxts.forEach(t => t.textContent = pct + '%');
+  if (psubs[0]) psubs[0].textContent = `${regCount.toLocaleString('es-PE')} de ${totalCount.toLocaleString('es-PE')} participantes completaron su registro · 20 estacas`;
+
+  // Actualizar también tab-estacas barra global
+  const fills2 = document.querySelectorAll('#tab-estacas .prog-fill');
+  const ptxts2 = document.querySelectorAll('#tab-estacas .prog-pct');
+  const psubs2 = document.querySelectorAll('#tab-estacas .prog-sub');
+  fills2.forEach(f => f.style.width = pct + '%');
+  ptxts2.forEach(t => t.textContent = pct + '%');
+  if (psubs2[0]) psubs2[0].textContent = `${regCount.toLocaleString('es-PE')} registrados · ${pendCount.toLocaleString('es-PE')} pendientes`;
+}
+
+async function renderStakes() {
   const container = document.getElementById('stake-list');
-  container.innerHTML = ESTACAS.map((e, i) => {
-    const pct = Math.round((e.registrados / e.total) * 100);
-    const pendientes = e.total - e.registrados;
-    let barColor = '#0F7B6C';
-    if (pct < 60) barColor = '#E05C3A';
-    else if (pct < 80) barColor = '#C4821A';
-    return `
-      <div class="stake-row">
-        <span class="stake-num">${i + 1}</span>
-        <span class="stake-name">${e.nombre}</span>
-        <div class="stake-bar-wrap">
-          <div class="stake-bar" style="width:${pct}%;background:${barColor}"></div>
-        </div>
-        <span class="stake-count">${e.registrados}/${e.total}</span>
-        <span class="stake-pct" style="color:${barColor}">${pct}%</span>
-      </div>`;
-  }).join('');
+  container.innerHTML = '<div style="padding:18px;text-align:center;color:var(--gray-4);font-size:13px">Cargando estacas…</div>';
+
+  try {
+    // Agrupar por estaca: total y registrados
+    const data = await sbFetch(
+      '/rest/v1/participantes?select=estaca,registrado'
+    );
+
+    if (!data || data.length === 0) {
+      container.innerHTML = '<div style="padding:18px;text-align:center;color:var(--gray-4);font-size:13px">Sin datos disponibles.</div>';
+      return;
+    }
+
+    // Agrupar en JS
+    const map = {};
+    data.forEach(p => {
+      if (!map[p.estaca]) map[p.estaca] = { total: 0, registrados: 0 };
+      map[p.estaca].total++;
+      if (p.registrado) map[p.estaca].registrados++;
+    });
+
+    const estacas = Object.entries(map)
+      .map(([nombre, v]) => ({ nombre, ...v }))
+      .sort((a, b) => b.registrados / b.total - a.registrados / a.total);
+
+    container.innerHTML = estacas.map((e, i) => {
+      const pct = e.total ? Math.round((e.registrados / e.total) * 100) : 0;
+      let barColor = '#0F7B6C';
+      if (pct < 60) barColor = '#E05C3A';
+      else if (pct < 80) barColor = '#C4821A';
+      return `
+        <div class="stake-row">
+          <span class="stake-num">${i + 1}</span>
+          <span class="stake-name">${e.nombre}</span>
+          <div class="stake-bar-wrap">
+            <div class="stake-bar" style="width:${pct}%;background:${barColor}"></div>
+          </div>
+          <span class="stake-count">${e.registrados}/${e.total}</span>
+          <span class="stake-pct" style="color:${barColor}">${pct}%</span>
+        </div>`;
+    }).join('');
+
+  } catch (err) {
+    container.innerHTML = '<div style="padding:18px;color:var(--danger);font-size:13px">Error al cargar estacas: ' + err.message + '</div>';
+  }
 }
 
-function renderStock() {
+async function renderStock() {
   const container = document.getElementById('stock-list');
-  container.innerHTML = STOCK.map(s => {
-    const pct = Math.min(100, Math.round((s.solicitados / s.disponibles) * 100));
-    const restante = s.disponibles - s.solicitados;
-    let pill, barColor;
-    if (restante > 10)       { pill = '<span class="stock-pill pill-ok">OK</span>';          barColor = '#0F7B6C'; }
-    else if (restante >= 0)  { pill = '<span class="stock-pill pill-warn">⚠ Stock bajo</span>'; barColor = '#C4821A'; }
-    else                     { pill = '<span class="stock-pill pill-danger">🔴 Sin stock</span>'; barColor = '#C0392B'; }
+  container.innerHTML = '<div style="padding:18px;text-align:center;color:var(--gray-4);font-size:13px">Cargando stock…</div>';
 
-    return `
-      <div class="stock-row">
-        <div class="stock-talla">${s.talla}</div>
-        <div class="stock-info">
-          <div class="si-name">Talla ${s.talla}</div>
-          <div class="si-sub">Solicitados: ${s.solicitados} · Disponibles: ${s.disponibles} · Restante: ${restante}</div>
-          <div class="si-bar-wrap">
-            <div class="si-bar" style="width:${pct}%;background:${barColor}"></div>
+  try {
+    // Contar tallas registradas y disponibles
+    const [pedidos, disponibles] = await Promise.all([
+      sbFetch('/rest/v1/participantes?select=talla&talla=not.is.null'),
+      sbFetch('/rest/v1/stock_polos?select=talla,disponibles').catch(() => null),
+    ]);
+
+    // Contar solicitados por talla
+    const solMap = {};
+    (pedidos || []).forEach(p => {
+      solMap[p.talla] = (solMap[p.talla] || 0) + 1;
+    });
+
+    // Si no existe tabla stock_polos, usamos solo solicitados
+    const TALLAS = ['XS','S','M','L','XL','XXL'];
+    const dispMap = {};
+    if (disponibles) {
+      disponibles.forEach(r => { dispMap[r.talla] = r.disponibles; });
+    }
+
+    const stockData = TALLAS.map(talla => ({
+      talla,
+      solicitados: solMap[talla] || 0,
+      disponibles: dispMap[talla] || null,
+    }));
+
+    container.innerHTML = stockData.map(s => {
+      const sol = s.solicitados;
+      const disp = s.disponibles;
+      const pct = disp ? Math.min(100, Math.round((sol / disp) * 100)) : 100;
+      const restante = disp !== null ? disp - sol : null;
+      let pill, barColor;
+      if (disp === null) {
+        pill = `<span class="stock-pill pill-ok">${sol} pedidos</span>`;
+        barColor = '#1B3A6B';
+      } else if (restante > 10) {
+        pill = '<span class="stock-pill pill-ok">OK</span>';
+        barColor = '#0F7B6C';
+      } else if (restante >= 0) {
+        pill = '<span class="stock-pill pill-warn">⚠ Stock bajo</span>';
+        barColor = '#C4821A';
+      } else {
+        pill = '<span class="stock-pill pill-danger">🔴 Sin stock</span>';
+        barColor = '#C0392B';
+      }
+      const subText = disp !== null
+        ? `Solicitados: ${sol} · Disponibles: ${disp} · Restante: ${restante}`
+        : `Solicitados: ${sol}`;
+      return `
+        <div class="stock-row">
+          <div class="stock-talla">${s.talla}</div>
+          <div class="stock-info">
+            <div class="si-name">Talla ${s.talla}</div>
+            <div class="si-sub">${subText}</div>
+            <div class="si-bar-wrap">
+              <div class="si-bar" style="width:${pct}%;background:${barColor}"></div>
+            </div>
           </div>
-        </div>
-        ${pill}
-      </div>`;
-  }).join('');
+          ${pill}
+        </div>`;
+    }).join('');
+
+  } catch (err) {
+    container.innerHTML = '<div style="padding:18px;color:var(--danger);font-size:13px">Error al cargar stock: ' + err.message + '</div>';
+  }
 }
 </script>
 </body>
