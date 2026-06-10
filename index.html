@@ -35,71 +35,43 @@
 
   html, body { height: 100%; background: var(--gray-1); font-family: 'Segoe UI', system-ui, sans-serif; color: var(--text); }
 
-  /* ─── SCREENS ─── */
   .screen { display: none; flex-direction: column; min-height: 100vh; }
   .screen.active { display: flex; }
 
-  /* ─── TOPBAR ─── */
   .topbar {
-    background: var(--blue);
-    color: var(--white);
-    padding: 14px 18px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
+    background: var(--blue); color: var(--white);
+    padding: 14px 18px; display: flex; align-items: center; gap: 12px;
     position: sticky; top: 0; z-index: 100;
   }
   .topbar h1 { font-size: 16px; font-weight: 600; flex: 1; }
   .topbar-back {
-    background: rgba(255,255,255,.15);
-    border: none; color: var(--white);
-    width: 34px; height: 34px;
-    border-radius: 50%; cursor: pointer;
-    font-size: 20px; line-height: 1;
-    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,.15); border: none; color: var(--white);
+    width: 34px; height: 34px; border-radius: 50%; cursor: pointer;
+    font-size: 20px; line-height: 1; display: flex; align-items: center; justify-content: center;
   }
   .topbar-badge {
-    background: var(--gold);
-    color: var(--blue);
-    font-size: 11px; font-weight: 700;
-    padding: 3px 11px; border-radius: 20px;
-    white-space: nowrap;
+    background: var(--gold); color: var(--blue);
+    font-size: 11px; font-weight: 700; padding: 3px 11px; border-radius: 20px; white-space: nowrap;
   }
 
-  /* ─── HERO (login) ─── */
   .hero {
     background: linear-gradient(160deg, var(--blue) 0%, var(--blue-2) 100%);
-    color: var(--white);
-    padding: 48px 24px 36px;
-    text-align: center;
+    color: var(--white); padding: 48px 24px 36px; text-align: center;
   }
-  .hero-logo {
-    font-size: 56px; font-weight: 800;
-    letter-spacing: -3px; line-height: 1;
-  }
+  .hero-logo { font-size: 56px; font-weight: 800; letter-spacing: -3px; line-height: 1; }
   .hero-logo span { color: var(--gold); }
-  .hero-tagline {
-    font-size: 12px; letter-spacing: 2px;
-    text-transform: uppercase; opacity: .7; margin-top: 8px;
-  }
+  .hero-tagline { font-size: 12px; letter-spacing: 2px; text-transform: uppercase; opacity: .7; margin-top: 8px; }
   .hero-pill {
     display: inline-block; margin-top: 18px;
-    background: rgba(255,255,255,.12);
-    border-radius: 20px; padding: 6px 18px;
-    font-size: 12px;
+    background: rgba(255,255,255,.12); border-radius: 20px; padding: 6px 18px; font-size: 12px;
   }
 
-  /* ─── LOGIN CARDS ─── */
   .login-cards { padding: 24px 18px; display: flex; flex-direction: column; gap: 12px; }
   .login-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: var(--gray-4); margin-bottom: 4px; }
   .role-card {
-    background: var(--white);
-    border-radius: var(--r);
-    padding: 18px 16px;
-    display: flex; align-items: center; gap: 14px;
-    cursor: pointer;
-    border: 1.5px solid var(--gray-2);
-    transition: border-color .15s, box-shadow .15s;
+    background: var(--white); border-radius: var(--r); padding: 18px 16px;
+    display: flex; align-items: center; gap: 14px; cursor: pointer;
+    border: 1.5px solid var(--gray-2); transition: border-color .15s, box-shadow .15s;
   }
   .role-card:hover { border-color: var(--blue); box-shadow: 0 4px 18px rgba(27,58,107,.13); }
   .role-icon { width: 46px; height: 46px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
@@ -107,67 +79,46 @@
   .role-card p { font-size: 12px; color: var(--gray-4); margin-top: 2px; }
   .role-arrow { margin-left: auto; color: var(--gray-3); font-size: 22px; }
 
-  /* ─── FORMS ─── */
   .form-body { padding: 20px 18px; flex: 1; display: flex; flex-direction: column; gap: 16px; }
   .field label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--gray-4); margin-bottom: 6px; }
   .field input, .field select {
-    width: 100%; padding: 12px 14px;
-    border: 1.5px solid var(--gray-2);
-    border-radius: var(--r-sm);
-    font-size: 16px; color: var(--text);
-    background: var(--white); outline: none;
-    transition: border-color .15s;
+    width: 100%; padding: 12px 14px; border: 1.5px solid var(--gray-2);
+    border-radius: var(--r-sm); font-size: 16px; color: var(--text);
+    background: var(--white); outline: none; transition: border-color .15s;
   }
   .field input:focus, .field select:focus { border-color: var(--blue); }
   .field input.error { border-color: var(--danger); }
 
-  /* ─── BUTTONS ─── */
   .btn {
-    width: 100%; padding: 14px;
-    border: none; border-radius: var(--r-sm);
-    font-size: 15px; font-weight: 700;
-    cursor: pointer; transition: opacity .15s, transform .1s;
-    letter-spacing: .2px;
+    width: 100%; padding: 14px; border: none; border-radius: var(--r-sm);
+    font-size: 15px; font-weight: 700; cursor: pointer;
+    transition: opacity .15s, transform .1s; letter-spacing: .2px;
   }
   .btn:active { transform: scale(.98); }
-  .btn-primary  { background: var(--blue);  color: var(--white); }
-  .btn-gold     { background: var(--gold);  color: var(--blue);  }
-  .btn-teal     { background: var(--teal);  color: var(--white); }
-  .btn-outline  { background: transparent; border: 1.5px solid var(--gray-2); color: var(--text); }
-  .btn-danger   { background: var(--danger); color: var(--white); }
+  .btn:disabled { opacity: .55; cursor: not-allowed; }
+  .btn-primary  { background: var(--blue);    color: var(--white); }
+  .btn-gold     { background: var(--gold);    color: var(--blue);  }
+  .btn-teal     { background: var(--teal);    color: var(--white); }
+  .btn-outline  { background: transparent;    border: 1.5px solid var(--gray-2); color: var(--text); }
+  .btn-danger   { background: var(--danger);  color: var(--white); }
 
-  /* ─── ALERTS ─── */
   .alert { padding: 13px 15px; border-radius: var(--r-sm); font-size: 13px; line-height: 1.55; }
-  .alert-info    { background: var(--blue-lt); color: var(--blue); }
-  .alert-warn    { background: var(--warn-bg); color: var(--warn-tx); }
-  .alert-ok      { background: var(--ok-bg);   color: var(--ok-tx); }
-  .alert-danger  { background: #fde8e8; color: var(--danger); }
+  .alert-info   { background: var(--blue-lt); color: var(--blue); }
+  .alert-warn   { background: var(--warn-bg); color: var(--warn-tx); }
+  .alert-ok     { background: var(--ok-bg);   color: var(--ok-tx); }
+  .alert-danger { background: #fde8e8;         color: var(--danger); }
 
-  /* ─── FICHA ─── */
+  /* FICHA */
   .ficha-wrap { padding: 16px 14px 24px; flex: 1; overflow-y: auto; }
-  .ficha {
-    background: var(--white);
-    border-radius: var(--r);
-    overflow: hidden;
-    box-shadow: 0 3px 20px rgba(0,0,0,.10);
-  }
-  .ficha-header {
-    background: var(--blue);
-    color: var(--white);
-    padding: 20px;
-    text-align: center;
-  }
+  .ficha { background: var(--white); border-radius: var(--r); overflow: hidden; box-shadow: 0 3px 20px rgba(0,0,0,.10); }
+  .ficha-header { background: var(--blue); color: var(--white); padding: 20px; text-align: center; }
   .ficha-header h2 { font-size: 26px; font-weight: 800; letter-spacing: -1.5px; }
   .ficha-header h2 span { color: var(--gold); }
   .ficha-header p { font-size: 11px; opacity: .7; letter-spacing: 1px; text-transform: uppercase; margin-top: 3px; }
   .ficha-nombre { padding: 18px 20px 12px; text-align: center; border-bottom: 1px solid var(--gray-2); }
   .ficha-nombre h3 { font-size: 22px; font-weight: 700; }
   .ficha-nombre p { font-size: 12px; color: var(--gray-4); margin-top: 3px; letter-spacing: .3px; }
-  .ficha-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    border-top: 1px solid var(--gray-2);
-  }
+  .ficha-grid { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--gray-2); }
   .fc { padding: 13px 16px; border-right: 1px solid var(--gray-2); border-bottom: 1px solid var(--gray-2); }
   .fc:nth-child(even) { border-right: none; }
   .fc.full { grid-column: 1 / -1; border-right: none; }
@@ -177,46 +128,29 @@
   .fc.accent .fc-val { color: var(--blue); }
   .fc.gold-bg { background: #FFF8E8; }
   .fc.gold-bg .fc-val { color: var(--gold-dk); }
-
   .ficha-croquis { padding: 16px; border-top: 1px solid var(--gray-2); }
   .ficha-croquis-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: var(--gray-4); margin-bottom: 10px; text-align: center; }
   .croquis-svg { width: 100%; max-width: 320px; display: block; margin: 0 auto; }
-
   .ficha-actions { padding: 14px 16px 18px; display: flex; flex-direction: column; gap: 9px; border-top: 1px solid var(--gray-2); }
 
-  /* ─── DASHBOARD ─── */
+  /* DASHBOARD */
   .dash-tabs {
-    display: flex;
-    background: var(--white);
-    border-bottom: 2px solid var(--gray-2);
-    overflow-x: auto;
-    scrollbar-width: none;
+    display: flex; background: var(--white);
+    border-bottom: 2px solid var(--gray-2); overflow-x: auto; scrollbar-width: none;
   }
   .dash-tab {
-    flex: 1; min-width: 80px;
-    padding: 13px 8px;
-    border: none; background: transparent;
-    font-size: 13px; font-weight: 600;
-    color: var(--gray-4); cursor: pointer;
-    border-bottom: 3px solid transparent;
-    margin-bottom: -2px;
-    white-space: nowrap;
+    flex: 1; min-width: 80px; padding: 13px 8px; border: none; background: transparent;
+    font-size: 13px; font-weight: 600; color: var(--gray-4); cursor: pointer;
+    border-bottom: 3px solid transparent; margin-bottom: -2px; white-space: nowrap;
     transition: color .15s, border-color .15s;
   }
   .dash-tab.active { color: var(--blue); border-bottom-color: var(--blue); }
-
   .tab-panel { display: none; flex-direction: column; gap: 14px; padding: 18px 16px; flex: 1; }
   .tab-panel.active { display: flex; }
 
-  /* stat cards */
   .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .stats-grid.three { grid-template-columns: 1fr 1fr 1fr; }
-  .stat-card {
-    background: var(--white);
-    border-radius: var(--r);
-    padding: 16px 14px;
-    text-align: center;
-  }
+  .stat-card { background: var(--white); border-radius: var(--r); padding: 16px 14px; text-align: center; }
   .stat-card .sc-val { font-size: 30px; font-weight: 800; line-height: 1; color: var(--blue); }
   .stat-card .sc-pct { font-size: 12px; font-weight: 700; color: var(--gray-4); margin-top: 2px; }
   .stat-card .sc-label { font-size: 11px; color: var(--gray-4); margin-top: 4px; line-height: 1.3; }
@@ -224,69 +158,76 @@
   .stat-card.teal  .sc-val { color: var(--teal); }
   .stat-card.coral .sc-val { color: var(--coral); }
 
-  /* progress bar */
   .prog-card { background: var(--white); border-radius: var(--r); padding: 16px; }
   .prog-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
-  .prog-title  { font-size: 14px; font-weight: 600; }
-  .prog-pct    { font-size: 15px; font-weight: 800; color: var(--teal); }
-  .prog-track  { height: 10px; background: var(--gray-2); border-radius: 5px; overflow: hidden; }
-  .prog-fill   { height: 100%; border-radius: 5px; background: var(--teal); transition: width .5s ease; }
-  .prog-sub    { font-size: 12px; color: var(--gray-4); margin-top: 7px; }
+  .prog-title { font-size: 14px; font-weight: 600; }
+  .prog-pct { font-size: 15px; font-weight: 800; color: var(--teal); }
+  .prog-track { height: 10px; background: var(--gray-2); border-radius: 5px; overflow: hidden; }
+  .prog-fill { height: 100%; border-radius: 5px; background: var(--teal); transition: width .5s ease; }
+  .prog-sub { font-size: 12px; color: var(--gray-4); margin-top: 7px; }
 
-  /* section titles */
   .sec-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: var(--gray-4); }
 
-  /* stake rows */
   .stake-list { background: var(--white); border-radius: var(--r); overflow: hidden; }
-  .stake-row {
-    display: flex; align-items: center; gap: 10px;
-    padding: 11px 14px;
-    border-bottom: 1px solid var(--gray-2);
-  }
+  .stake-row { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-bottom: 1px solid var(--gray-2); }
   .stake-row:last-child { border-bottom: none; }
-  .stake-num  { width: 22px; font-size: 12px; font-weight: 700; color: var(--gray-3); text-align: right; flex-shrink: 0; }
+  .stake-num { width: 22px; font-size: 12px; font-weight: 700; color: var(--gray-3); text-align: right; flex-shrink: 0; }
   .stake-name { font-size: 13px; font-weight: 600; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .stake-bar-wrap { flex: 2; height: 7px; background: var(--gray-2); border-radius: 4px; overflow: hidden; }
-  .stake-bar  { height: 100%; border-radius: 4px; background: var(--blue); }
+  .stake-bar { height: 100%; border-radius: 4px; background: var(--blue); }
   .stake-count { font-size: 12px; color: var(--gray-4); min-width: 52px; text-align: right; flex-shrink: 0; }
-  .stake-pct  { font-size: 11px; font-weight: 700; min-width: 34px; text-align: right; flex-shrink: 0; }
+  .stake-pct { font-size: 11px; font-weight: 700; min-width: 34px; text-align: right; flex-shrink: 0; }
 
-  /* stock rows */
   .stock-list { background: var(--white); border-radius: var(--r); overflow: hidden; }
-  .stock-row {
-    display: flex; align-items: center; gap: 12px;
-    padding: 12px 14px;
-    border-bottom: 1px solid var(--gray-2);
-  }
+  .stock-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-bottom: 1px solid var(--gray-2); }
   .stock-row:last-child { border-bottom: none; }
-  .stock-talla {
-    width: 40px; height: 40px;
-    background: var(--blue-lt); border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 13px; font-weight: 800; color: var(--blue);
-    flex-shrink: 0;
-  }
+  .stock-talla { width: 40px; height: 40px; background: var(--blue-lt); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: var(--blue); flex-shrink: 0; }
   .stock-info { flex: 1; }
-  .stock-info .si-name  { font-size: 13px; font-weight: 600; }
-  .stock-info .si-sub   { font-size: 11px; color: var(--gray-4); margin-top: 2px; }
+  .stock-info .si-name { font-size: 13px; font-weight: 600; }
+  .stock-info .si-sub { font-size: 11px; color: var(--gray-4); margin-top: 2px; }
   .stock-info .si-bar-wrap { height: 5px; background: var(--gray-2); border-radius: 3px; overflow: hidden; margin-top: 5px; }
-  .stock-info .si-bar   { height: 100%; border-radius: 3px; }
-  .stock-pill {
-    font-size: 10px; font-weight: 700;
-    padding: 3px 9px; border-radius: 20px;
-    white-space: nowrap;
-  }
+  .stock-info .si-bar { height: 100%; border-radius: 3px; }
+  .stock-pill { font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
   .pill-ok     { background: var(--ok-bg);   color: var(--ok-tx); }
   .pill-warn   { background: var(--warn-bg); color: var(--warn-tx); }
-  .pill-danger { background: #fde8e8; color: var(--danger); }
+  .pill-danger { background: #fde8e8;         color: var(--danger); }
 
-  /* login admin */
+  /* YA REGISTRADO */
+  .registrado-banner {
+    background: var(--ok-bg); border: 1.5px solid #a5d6a7;
+    border-radius: var(--r); padding: 16px; text-align: center;
+  }
+  .registrado-banner .rb-icon { font-size: 32px; margin-bottom: 6px; }
+  .registrado-banner .rb-title { font-size: 16px; font-weight: 700; color: var(--ok-tx); }
+  .registrado-banner .rb-sub { font-size: 12px; color: var(--ok-tx); opacity: .8; margin-top: 4px; }
+
   .admin-login { padding: 20px 18px; display: flex; flex-direction: column; gap: 14px; flex: 1; }
 
-  /* ─── UTILS ─── */
   .divider { height: 1px; background: var(--gray-2); }
   .spacer  { flex: 1; }
   .hidden  { display: none !important; }
+
+  /* Spinner */
+  .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.4); border-top-color: #fff; border-radius: 50%; animation: spin .6s linear infinite; vertical-align: middle; margin-right: 6px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+
+  /* BUS TABLE */
+  .bus-table { width:100%; border-collapse:collapse; font-size:13px; }
+  .bus-table th { background:var(--blue-lt); color:var(--blue); font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; padding:9px 12px; text-align:center; border-bottom:2px solid var(--gray-2); }
+  .bus-table th:first-child { text-align:left; }
+  .bus-table td { padding:9px 12px; border-bottom:1px solid var(--gray-2); text-align:center; color:var(--text); }
+  .bus-table td:first-child { text-align:left; font-weight:600; font-size:12px; }
+  .bus-table tr:last-child td { border-bottom:none; }
+  .bus-table tr:hover td { background:var(--gray-1); }
+  .bus-num-pill { display:inline-block; background:var(--blue-lt); color:var(--blue); font-weight:700; font-size:12px; padding:2px 8px; border-radius:6px; min-width:28px; }
+  .bus-num-pill.zero { background:var(--gray-2); color:var(--gray-3); }
+  .kit-talla-row { display:flex; align-items:center; gap:8px; padding:10px 14px; border-bottom:1px solid var(--gray-2); }
+  .kit-talla-row:last-child { border-bottom:none; }
+  .kit-bus-label { font-size:12px; font-weight:700; color:var(--blue); min-width:44px; }
+  .kit-tallas { display:flex; gap:6px; flex-wrap:wrap; }
+  .kit-badge { background:var(--gray-1); border:1px solid var(--gray-2); border-radius:6px; padding:3px 8px; font-size:12px; font-weight:600; }
+  .kit-badge span { color:var(--blue); font-weight:800; }
 
   @media (max-width: 380px) {
     .hero-logo { font-size: 48px; }
@@ -336,16 +277,14 @@
   </div>
   <div class="form-body">
     <div class="alert alert-info">
-      Ingresa tu número de DNI para encontrar tus datos. Si ya estás en la lista, solo confirmarás tu talla de polo.
+      Ingresa tu DNI para encontrar tus datos. Solo necesitarás confirmar tu talla de polo y tu bus.
     </div>
     <div class="field">
       <label>DNI</label>
       <input type="number" id="dni-input" placeholder="Ej. 74561234" inputmode="numeric" maxlength="8">
     </div>
-    <div id="dni-error" class="alert alert-danger hidden">
-      DNI no encontrado. Consulta a tu líder de estaca o al staff del evento.
-    </div>
-    <button class="btn btn-primary" onclick="buscarDNI()">Buscar mis datos →</button>
+    <div id="dni-error" class="alert alert-danger hidden"></div>
+    <button class="btn btn-primary" id="btn-buscar" onclick="buscarDNI()">Buscar mis datos →</button>
   </div>
 </div>
 
@@ -359,6 +298,14 @@
     <h1>Completa tu registro</h1>
   </div>
   <div class="form-body">
+
+    <!-- Banner si ya está registrado -->
+    <div id="ya-registrado-banner" class="registrado-banner hidden">
+      <div class="rb-icon">✅</div>
+      <div class="rb-title">Ya completaste tu registro</div>
+      <div class="rb-sub">Puedes ver tu ficha o actualizar tu talla de polo si lo necesitas.</div>
+    </div>
+
     <div class="alert alert-ok" id="form-bienvenida"></div>
 
     <div class="ficha-grid" style="border-radius:var(--r-sm);overflow:hidden;border:1px solid var(--gray-2)">
@@ -371,24 +318,24 @@
         <div class="fc-val" id="pf-estaca"></div>
       </div>
       <div class="fc full">
-        <div class="fc-label">Nombre</div>
+        <div class="fc-label">Nombre completo</div>
         <div class="fc-val" id="pf-nombre"></div>
       </div>
       <div class="fc full">
-        <div class="fc-label">Compañía / Curso</div>
+        <div class="fc-label">Centro de Coordinación</div>
         <div class="fc-val" id="pf-cc"></div>
       </div>
     </div>
 
     <div class="field">
-      <label>N.° de Bus</label>
+      <label>N.° de Bus <span style="font-weight:400;text-transform:none;font-size:11px;color:var(--gray-3)">(máx. 5 por estaca)</span></label>
       <select id="f-bus">
         <option value="">— Selecciona tu bus —</option>
-        <option value="1">Bus 1</option>
-        <option value="2">Bus 2</option>
-        <option value="3">Bus 3</option>
-        <option value="4">Bus 4</option>
-        <option value="5">Bus 5</option>
+        <option value="Bus 1">Bus 1</option>
+        <option value="Bus 2">Bus 2</option>
+        <option value="Bus 3">Bus 3</option>
+        <option value="Bus 4">Bus 4</option>
+        <option value="Bus 5">Bus 5</option>
       </select>
     </div>
 
@@ -402,7 +349,8 @@
     <div id="stock-warn" class="alert alert-warn hidden"></div>
 
     <div class="spacer"></div>
-    <button class="btn btn-gold" onclick="confirmarRegistro()">Confirmar y ver mi ficha →</button>
+    <button class="btn btn-gold" id="btn-confirmar" onclick="confirmarRegistro()">Confirmar y ver mi ficha →</button>
+    <button class="btn btn-outline" id="btn-ver-ficha" onclick="verFichaExistente()" style="display:none">Ver mi ficha →</button>
   </div>
 </div>
 
@@ -421,12 +369,10 @@
         <h2>JAS<span>·</span>2026</h2>
         <p>Centro Vacacional Huampaní</p>
       </div>
-
       <div class="ficha-nombre">
         <h3 id="fc-nombre"></h3>
         <p id="fc-cc"></p>
       </div>
-
       <div class="ficha-grid">
         <div class="fc accent">
           <div class="fc-label">Estaca</div>
@@ -465,9 +411,7 @@
       <div class="ficha-croquis">
         <div class="ficha-croquis-title">Croquis — Centro Vacacional Huampaní</div>
         <svg class="croquis-svg" viewBox="0 0 320 175" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <!-- fondo -->
           <rect width="320" height="175" rx="8" fill="#EFF4FF"/>
-          <!-- zonas -->
           <rect x="12" y="12" width="82" height="50" rx="5" fill="#1B3A6B" fill-opacity=".12" stroke="#1B3A6B" stroke-width="1"/>
           <text x="53" y="42" font-size="9" fill="#1B3A6B" text-anchor="middle" font-weight="700">INGRESO</text>
           <rect x="120" y="12" width="90" height="65" rx="5" fill="#0F7B6C" fill-opacity=".18" stroke="#0F7B6C" stroke-width="1"/>
@@ -481,12 +425,10 @@
           <text x="177" y="125" font-size="9" fill="#1B3A6B" text-anchor="middle" font-weight="700">HABITACIONES</text>
           <rect x="248" y="90" width="60" height="38" rx="5" fill="#6C63FF" fill-opacity=".18" stroke="#6C63FF" stroke-width="1"/>
           <text x="278" y="113" font-size="8" fill="#3a33aa" text-anchor="middle" font-weight="700">SS.HH.</text>
-          <!-- paths -->
           <line x1="94" y1="37" x2="120" y2="37" stroke="#1B3A6B" stroke-width="1.5" stroke-dasharray="3,2"/>
           <polygon points="116,34 120,37 116,40" fill="#1B3A6B"/>
           <line x1="210" y1="44" x2="232" y2="44" stroke="#1B3A6B" stroke-width="1.5" stroke-dasharray="3,2"/>
           <polygon points="228,41 232,44 228,47" fill="#1B3A6B"/>
-          <!-- leyenda -->
           <rect x="12" y="155" width="9" height="9" rx="2" fill="#1B3A6B" fill-opacity=".5"/>
           <text x="24" y="163" font-size="8" fill="#555">Ingreso</text>
           <rect x="70" y="155" width="9" height="9" rx="2" fill="#0F7B6C" fill-opacity=".5"/>
@@ -520,8 +462,8 @@
   <div class="admin-login">
     <div class="alert alert-warn">Solo personal autorizado del evento JAS 2026.</div>
     <div class="field">
-      <label>Usuario</label>
-      <input type="text" id="admin-user" placeholder="admin">
+      <label>Correo</label>
+      <input type="email" id="admin-user" placeholder="admin@jas2026.com">
     </div>
     <div class="field">
       <label>Contraseña</label>
@@ -529,7 +471,7 @@
     </div>
     <div id="admin-error" class="alert alert-danger hidden">Usuario o contraseña incorrectos.</div>
     <div class="spacer"></div>
-    <button class="btn btn-primary" onclick="adminLogin()">Ingresar al dashboard →</button>
+    <button class="btn btn-primary" id="btn-admin-login" onclick="adminLogin()">Ingresar al dashboard →</button>
   </div>
 </div>
 
@@ -547,106 +489,136 @@
   <div class="dash-tabs">
     <button class="dash-tab active" onclick="switchTab(this,'tab-general')">General</button>
     <button class="dash-tab" onclick="switchTab(this,'tab-estacas')">Estacas</button>
-    <button class="dash-tab" onclick="switchTab(this,'tab-stock')">Stock</button>
+    <button class="dash-tab" onclick="switchTab(this,'tab-buses')">Buses</button>
+    <button class="dash-tab" onclick="switchTab(this,'tab-stock')">Stock polos</button>
   </div>
 
-  <!-- ── TAB: GENERAL ── -->
+  <!-- TAB: GENERAL -->
   <div id="tab-general" class="tab-panel active">
-
     <div class="stats-grid three">
       <div class="stat-card">
-        <div class="sc-val">1,200</div>
+        <div class="sc-val" id="d-total">—</div>
         <div class="sc-label">Total inscritos</div>
       </div>
       <div class="stat-card teal">
-        <div class="sc-val">847</div>
-        <div class="sc-pct">70.6%</div>
+        <div class="sc-val" id="d-reg">—</div>
+        <div class="sc-pct" id="d-reg-pct"></div>
         <div class="sc-label">Registrados</div>
       </div>
       <div class="stat-card gold">
-        <div class="sc-val">353</div>
-        <div class="sc-pct">29.4%</div>
+        <div class="sc-val" id="d-pend">—</div>
+        <div class="sc-pct" id="d-pend-pct"></div>
         <div class="sc-label">Pendientes</div>
       </div>
     </div>
-
     <div class="prog-card">
       <div class="prog-header">
         <span class="prog-title">Avance de registro</span>
-        <span class="prog-pct">70.6%</span>
+        <span class="prog-pct" id="d-pct-g">0%</span>
       </div>
       <div class="prog-track">
-        <div class="prog-fill" style="width:70.6%"></div>
+        <div class="prog-fill" id="d-fill-g" style="width:0%"></div>
       </div>
-      <div class="prog-sub">847 de 1,200 participantes completaron su registro · 20 estacas</div>
+      <div class="prog-sub" id="d-sub-g">Cargando…</div>
     </div>
-
     <div class="stats-grid">
       <div class="stat-card">
-        <div class="sc-val" style="font-size:24px">24</div>
+        <div class="sc-val" id="d-buses" style="font-size:24px">—</div>
         <div class="sc-label">Buses asignados</div>
       </div>
       <div class="stat-card coral">
-        <div class="sc-val" style="font-size:24px">3</div>
+        <div class="sc-val" id="d-stock-alerta" style="font-size:24px">—</div>
         <div class="sc-label">Tallas con alerta de stock</div>
       </div>
     </div>
-
-    <button class="btn btn-outline" onclick="exportarCSV()">
-      📥 Exportar informe completo
-    </button>
+    <button class="btn btn-outline" onclick="exportarCSV()">📥 Exportar informe completo</button>
   </div>
 
-  <!-- ── TAB: ESTACAS ── -->
+  <!-- TAB: ESTACAS -->
   <div id="tab-estacas" class="tab-panel">
-    <p class="sec-title">Registro por estaca — 20 estacas · 1,200 participantes</p>
-
+    <p class="sec-title">Registro por estaca</p>
     <div class="prog-card">
       <div class="prog-header">
         <span class="prog-title">Progreso global</span>
-        <span class="prog-pct">70.6%</span>
+        <span class="prog-pct" id="d-pct-e">0%</span>
       </div>
       <div class="prog-track">
-        <div class="prog-fill" style="width:70.6%"></div>
+        <div class="prog-fill" id="d-fill-e" style="width:0%"></div>
       </div>
-      <div class="prog-sub">847 registrados · 353 pendientes</div>
+      <div class="prog-sub" id="d-sub-e">Cargando…</div>
     </div>
-
-    <div class="stake-list" id="stake-list"></div>
-
-    <button class="btn btn-outline" onclick="exportarCSV('estacas')">
-      📥 Exportar por estaca
-    </button>
+    <div class="stake-list" id="stake-list">
+      <div style="padding:18px;text-align:center;color:var(--gray-4);font-size:13px">Cargando estacas…</div>
+    </div>
+    <button class="btn btn-outline" onclick="exportarCSV('estacas')">📥 Exportar por estaca</button>
   </div>
 
-  <!-- ── TAB: STOCK ── -->
+  <!-- TAB: STOCK -->
   <div id="tab-stock" class="tab-panel">
     <p class="sec-title">Stock de polos — control por talla</p>
-
     <div class="stats-grid three">
       <div class="stat-card teal">
-        <div class="sc-val" style="font-size:24px">3</div>
-        <div class="sc-label">Tallas OK</div>
+        <div class="sc-val" id="d-s-ok" style="font-size:24px">—</div>
+        <div class="sc-label">Tallas con stock OK</div>
       </div>
       <div class="stat-card gold">
-        <div class="sc-val" style="font-size:24px">2</div>
+        <div class="sc-val" id="d-s-bajo" style="font-size:24px">—</div>
         <div class="sc-label">Stock bajo</div>
       </div>
       <div class="stat-card coral">
-        <div class="sc-val" style="font-size:24px">1</div>
+        <div class="sc-val" id="d-s-agot" style="font-size:24px">—</div>
         <div class="sc-label">Sin stock</div>
       </div>
     </div>
+    <div class="stock-list" id="stock-list">
+      <div style="padding:18px;text-align:center;color:var(--gray-4);font-size:13px">Cargando stock…</div>
+    </div>
+    <div id="stock-alerta-banner" class="alert alert-warn hidden"></div>
+    <button class="btn btn-outline" onclick="exportarCSV('stock')">📥 Exportar stock</button>
+  </div>
 
-    <div class="stock-list" id="stock-list"></div>
 
-    <div class="alert alert-warn">
-      ⚠ Talla XL sin stock — 13 participantes sin talla asignada. Coordinar reposición antes del evento.
+  <!-- TAB: BUSES -->
+  <div id="tab-buses" class="tab-panel">
+    <p class="sec-title">Distribución por bus — todas las estacas</p>
+
+    <!-- Resumen global por bus -->
+    <div class="stats-grid" style="grid-template-columns:repeat(5,1fr);gap:8px" id="buses-resumen">
+      <div class="stat-card" style="padding:12px 6px">
+        <div class="sc-val" id="db-b1" style="font-size:22px">—</div>
+        <div class="sc-label">Bus 1</div>
+      </div>
+      <div class="stat-card" style="padding:12px 6px">
+        <div class="sc-val" id="db-b2" style="font-size:22px">—</div>
+        <div class="sc-label">Bus 2</div>
+      </div>
+      <div class="stat-card" style="padding:12px 6px">
+        <div class="sc-val" id="db-b3" style="font-size:22px">—</div>
+        <div class="sc-label">Bus 3</div>
+      </div>
+      <div class="stat-card" style="padding:12px 6px">
+        <div class="sc-val" id="db-b4" style="font-size:22px">—</div>
+        <div class="sc-label">Bus 4</div>
+      </div>
+      <div class="stat-card" style="padding:12px 6px">
+        <div class="sc-val" id="db-b5" style="font-size:22px">—</div>
+        <div class="sc-label">Bus 5</div>
+      </div>
     </div>
 
-    <button class="btn btn-outline" onclick="exportarCSV('stock')">
-      📥 Exportar stock
-    </button>
+    <!-- Tabla: participantes por estaca x bus -->
+    <p class="sec-title" style="margin-top:4px">Participantes por estaca y bus</p>
+    <div id="buses-estaca-list" style="background:var(--white);border-radius:var(--r);overflow:hidden">
+      <div style="padding:18px;text-align:center;color:var(--gray-4);font-size:13px">Cargando…</div>
+    </div>
+
+    <!-- Tabla: tallas por bus (para armar kits) -->
+    <p class="sec-title" style="margin-top:4px">Tallas de polo por bus <span style="font-size:10px;font-weight:400;text-transform:none">(para armar kits)</span></p>
+    <div id="buses-tallas-list" style="background:var(--white);border-radius:var(--r);overflow:hidden">
+      <div style="padding:18px;text-align:center;color:var(--gray-4);font-size:13px">Cargando…</div>
+    </div>
+
+    <button class="btn btn-outline" onclick="exportarCSV('buses')">📥 Exportar informe de buses</button>
   </div>
 
 </div><!-- /s-admin -->
@@ -679,7 +651,7 @@ async function sbFetch(path, options = {}) {
 }
 
 // ════════════════════════════════════════
-// ESTADO
+// ESTADO GLOBAL
 // ════════════════════════════════════════
 let currentParticipante = null;
 
@@ -700,21 +672,21 @@ function switchTab(btn, panelId) {
 }
 
 // ════════════════════════════════════════
-// PARTICIPANTE
+// PARTICIPANTE — BUSCAR DNI
 // ════════════════════════════════════════
 async function buscarDNI() {
   const dni = document.getElementById('dni-input').value.trim();
   const errEl = document.getElementById('dni-error');
-  const btn = document.querySelector('#s-participante-dni .btn-primary');
+  const btn = document.getElementById('btn-buscar');
   errEl.classList.add('hidden');
 
-  if (dni.length < 8) {
+  if (!/^\d{8}$/.test(dni)) {
     errEl.textContent = 'Ingresa un DNI válido de 8 dígitos.';
     errEl.classList.remove('hidden');
     return;
   }
 
-  btn.textContent = 'Buscando…';
+  btn.innerHTML = '<span class="spinner"></span>Buscando…';
   btn.disabled = true;
 
   try {
@@ -731,16 +703,36 @@ async function buscarDNI() {
     const p = data[0];
     currentParticipante = p;
 
+    // Mostrar datos precargados
+    const primerNombre = p.nombre.split(' ')[0];
     document.getElementById('form-bienvenida').textContent =
-      '¡Hola, ' + p.nombre.split(' ')[0] + '! Verifica tus datos, elige tu bus y tu talla de polo.';
-    document.getElementById('pf-dni').textContent     = p.dni;
-    document.getElementById('pf-nombre').textContent  = p.nombre;
-    document.getElementById('pf-cc').textContent      = p.cc;
-    document.getElementById('pf-estaca').textContent  = p.estaca;
-    document.getElementById('f-bus').value   = p.bus || '';
-    document.getElementById('stock-warn').classList.add('hidden');
+      `¡Hola, ${primerNombre}! Verifica tus datos y completa la información faltante.`;
+    document.getElementById('pf-dni').textContent    = p.dni;
+    document.getElementById('pf-nombre').textContent = p.nombre;
+    document.getElementById('pf-cc').textContent     = p.cc;
+    document.getElementById('pf-estaca').textContent = p.estaca;
 
-    await cargarTallasDisponibles(p.talla || '');
+    // Banner si ya está registrado
+    const banner = document.getElementById('ya-registrado-banner');
+    const btnVerFicha = document.getElementById('btn-ver-ficha');
+    const btnConfirmar = document.getElementById('btn-confirmar');
+
+    if (p.registrado) {
+      banner.classList.remove('hidden');
+      btnVerFicha.style.display = 'block';
+      btnConfirmar.textContent = 'Actualizar registro →';
+    } else {
+      banner.classList.add('hidden');
+      btnVerFicha.style.display = 'none';
+      btnConfirmar.textContent = 'Confirmar y ver mi ficha →';
+    }
+
+    // Preseleccionar bus si ya lo eligió antes
+    const busSelect = document.getElementById('f-bus');
+    if (p.bus) busSelect.value = p.bus;
+
+    // Cargar tallas disponibles
+    await cargarTallasDisponibles(p.talla_polo || '');
 
     go('s-participante-form');
 
@@ -748,10 +740,11 @@ async function buscarDNI() {
     errEl.textContent = 'Error de conexión: ' + e.message;
     errEl.classList.remove('hidden');
   } finally {
-    btn.textContent = 'Buscar mis datos →';
+    btn.innerHTML = 'Buscar mis datos →';
     btn.disabled = false;
   }
 }
+
 
 // ════════════════════════════════════════
 // STOCK DE TALLAS
@@ -760,56 +753,79 @@ const TODAS_TALLAS = ['XS','S','M','L','XL','XXL'];
 
 async function cargarTallasDisponibles(tallaActual) {
   const select = document.getElementById('f-talla');
-  select.innerHTML = '<option value="">— Cargando tallas disponibles… —</option>';
+  select.innerHTML = '<option value="">— Cargando tallas… —</option>';
   document.getElementById('stock-warn').classList.add('hidden');
 
   try {
     const [pedidos, stockData] = await Promise.all([
-      sbFetch('/rest/v1/participantes?select=talla&talla=not.is.null'),
-      sbFetch('/rest/v1/stock_polos?select=talla,disponibles').catch(() => null),
+      sbFetch('/rest/v1/participantes?select=talla_polo&talla_polo=not.is.null'),
+      sbFetch('/rest/v1/stock_polos?select=talla,total').catch(() => null),
     ]);
 
+    // Contar cuántos ya pidieron cada talla
     const solMap = {};
-    (pedidos || []).forEach(p => { solMap[p.talla] = (solMap[p.talla] || 0) + 1; });
+    (pedidos || []).forEach(p => {
+      if (p.talla_polo) solMap[p.talla_polo] = (solMap[p.talla_polo] || 0) + 1;
+    });
 
-    const dispMap = {};
-    if (stockData) stockData.forEach(r => { dispMap[r.talla] = r.disponibles; });
+    // Mapa de stock disponible
+    const totalMap = {};
+    if (stockData) stockData.forEach(r => { totalMap[r.talla] = r.total; });
 
     let opciones = '<option value="">— Selecciona tu talla —</option>';
     let hayDisponibles = false;
+    let agotadas = [];
 
     TODAS_TALLAS.forEach(t => {
-      const disp = dispMap[t];
+      const total = totalMap[t];
       const sol = solMap[t] || 0;
-      // Si la talla actual del participante ya es esta, no contarla como "ocupando" cupo
+      // Si el participante ya tiene esta talla, no la contamos como ocupada
       const solAjustado = (t === tallaActual) ? Math.max(0, sol - 1) : sol;
-      const sinStock = (disp !== undefined && disp !== null) ? (solAjustado >= disp) : false;
+      const restante = (total !== undefined) ? total - solAjustado : null;
+      const sinStock = (restante !== null) && restante <= 0;
 
       if (sinStock && t !== tallaActual) {
-        return; // se elimina la opción
+        agotadas.push(t);
+        return; // no mostrar en select
       }
+
       hayDisponibles = true;
       const sel = (t === tallaActual) ? ' selected' : '';
-      const etiqueta = sinStock ? `${t} (último disponible)` : t;
+      let etiqueta = t;
+      if (restante !== null && restante <= 10 && restante > 0) {
+        etiqueta = `${t} (últimos ${restante})`;
+      } else if (t === tallaActual && sinStock) {
+        etiqueta = `${t} (tu talla actual)`;
+      }
       opciones += `<option value="${t}"${sel}>${etiqueta}</option>`;
     });
 
     select.innerHTML = opciones;
 
-    if (!hayDisponibles) {
+    if (agotadas.length > 0) {
       const warnEl = document.getElementById('stock-warn');
-      warnEl.textContent = '⚠ No hay tallas disponibles en stock. Consulta con el staff de logística.';
+      warnEl.textContent = `⚠ Tallas agotadas: ${agotadas.join(', ')}. Consulta con el staff de logística.`;
       warnEl.classList.remove('hidden');
     }
+
+    if (!hayDisponibles) {
+      const warnEl = document.getElementById('stock-warn');
+      warnEl.textContent = '⚠ No hay tallas disponibles en este momento. Consulta con el staff.';
+      warnEl.classList.remove('hidden');
+    }
+
   } catch (e) {
     select.innerHTML = '<option value="">— Error al cargar tallas —</option>';
   }
 }
 
+// ════════════════════════════════════════
+// CONFIRMAR REGISTRO
+// ════════════════════════════════════════
 async function confirmarRegistro() {
-  const bus = document.getElementById('f-bus').value;
+  const bus   = document.getElementById('f-bus').value;
   const talla = document.getElementById('f-talla').value;
-  const btn = document.querySelector('#s-participante-form .btn-gold');
+  const btn   = document.getElementById('btn-confirmar');
 
   if (!bus) {
     alert('Por favor selecciona tu número de bus.');
@@ -820,75 +836,100 @@ async function confirmarRegistro() {
     return;
   }
 
-  btn.textContent = 'Guardando…';
+  btn.innerHTML = '<span class="spinner"></span>Guardando…';
   btn.disabled = true;
 
   try {
+    // Verificar stock una vez más antes de guardar (anti race condition)
+    const [pedidos, stockData] = await Promise.all([
+      sbFetch('/rest/v1/participantes?select=talla_polo&talla_polo=not.is.null'),
+      sbFetch('/rest/v1/stock_polos?select=talla,total').catch(() => null),
+    ]);
+
+    const solMap = {};
+    (pedidos || []).forEach(p => {
+      if (p.talla_polo) solMap[p.talla_polo] = (solMap[p.talla_polo] || 0) + 1;
+    });
+    const totalMap = {};
+    if (stockData) stockData.forEach(r => { totalMap[r.talla] = r.total; });
+
+    const tallaAnterior = currentParticipante.talla_polo || '';
+    const solAjustado = (talla === tallaAnterior)
+      ? Math.max(0, (solMap[talla] || 0) - 1)
+      : (solMap[talla] || 0);
+    const total = totalMap[talla];
+    if (total !== undefined && solAjustado >= total) {
+      alert(`Lo sentimos, la talla ${talla} acaba de agotarse. Por favor selecciona otra talla.`);
+      await cargarTallasDisponibles(tallaAnterior);
+      return;
+    }
+
+    // Guardar en Supabase — CORRECCIÓN: campo es talla_polo
     await sbFetch(
       `/rest/v1/participantes?dni=eq.${encodeURIComponent(currentParticipante.dni)}`,
       {
         method: 'PATCH',
         prefer: 'return=minimal',
-        body: JSON.stringify({
-          bus,
-          talla,
-          registrado: true,
-        }),
+        body: JSON.stringify({ bus, talla_polo: talla, registrado: true }),
       }
     );
 
-    currentParticipante.bus   = bus;
-    currentParticipante.talla = talla;
+    currentParticipante.bus       = bus;
+    currentParticipante.talla_polo = talla;
+    currentParticipante.registrado = true;
 
-    // Rellenar ficha
-    document.getElementById('fc-nombre').textContent     = currentParticipante.nombre;
-    document.getElementById('fc-cc').textContent         = currentParticipante.cc;
-    document.getElementById('fc-estaca').textContent     = currentParticipante.estaca;
-    document.getElementById('fc-bus').textContent        = bus;
-    document.getElementById('fc-mesa').textContent       = currentParticipante.mesa;
-    document.getElementById('fc-salon').textContent      = currentParticipante.salon;
-    document.getElementById('fc-compania').textContent   = currentParticipante.compania;
-    document.getElementById('fc-talla').textContent      = talla;
-    document.getElementById('fc-consejeros').textContent = currentParticipante.consejeros;
-    document.getElementById('fc-habitacion').textContent = currentParticipante.habitacion;
-
+    rellenarFicha(currentParticipante);
     go('s-ficha');
 
   } catch (e) {
     alert('No se pudo guardar: ' + e.message);
   } finally {
-    btn.textContent = 'Confirmar y ver mi ficha →';
+    btn.innerHTML = 'Confirmar y ver mi ficha →';
     btn.disabled = false;
   }
+}
+
+function verFichaExistente() {
+  rellenarFicha(currentParticipante);
+  go('s-ficha');
+}
+
+function rellenarFicha(p) {
+  document.getElementById('fc-nombre').textContent     = p.nombre;
+  document.getElementById('fc-cc').textContent         = p.cc + ' · ' + p.estaca;
+  document.getElementById('fc-estaca').textContent     = p.estaca;
+  document.getElementById('fc-bus').textContent        = p.bus        || '—';
+  document.getElementById('fc-mesa').textContent       = p.mesa       || '—';
+  document.getElementById('fc-salon').textContent      = p.salon      || '—';
+  document.getElementById('fc-compania').textContent   = p.compania   || '—';
+  document.getElementById('fc-talla').textContent      = p.talla_polo || '—';
+  document.getElementById('fc-consejeros').textContent = p.consejeros || '—';
+  document.getElementById('fc-habitacion').textContent = p.habitacion || '—';
 }
 
 function descargarFicha() {
   alert('Para guardar tu ficha: usa el menú del navegador → "Compartir" → "Agregar a pantalla de inicio" (iOS) o toma una captura de pantalla.');
 }
 
-
-
+// ════════════════════════════════════════
+// ADMIN — LOGIN
+// ════════════════════════════════════════
 async function adminLogin() {
-  const user = document.getElementById('admin-user').value.trim();
-  const pass = document.getElementById('admin-pass').value;
+  const user  = document.getElementById('admin-user').value.trim();
+  const pass  = document.getElementById('admin-pass').value;
   const errEl = document.getElementById('admin-error');
-  const btn = document.querySelector('#s-admin-login .btn-primary');
+  const btn   = document.getElementById('btn-admin-login');
   errEl.classList.add('hidden');
 
-  btn.textContent = 'Verificando…';
+  btn.innerHTML = '<span class="spinner"></span>Verificando…';
   btn.disabled = true;
 
   try {
-    // Autenticar con Supabase Auth (email/password)
     const res = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=password', {
       method: 'POST',
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Content-Type': 'application/json',
-      },
+      headers: { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: user, password: pass }),
     });
-
     if (!res.ok) throw new Error('credenciales');
 
     await renderDashboard();
@@ -897,69 +938,109 @@ async function adminLogin() {
   } catch (e) {
     errEl.classList.remove('hidden');
   } finally {
-    btn.textContent = 'Ingresar al dashboard →';
+    btn.innerHTML = 'Ingresar al dashboard →';
     btn.disabled = false;
   }
 }
 
 // ════════════════════════════════════════
-// EXPORTAR CSV
-// ════════════════════════════════════════
-async function exportarCSV(modo) {
-  try {
-    let data, filename, headers, rows;
-
-    if (modo === 'stock') {
-      const pedidos = await sbFetch('/rest/v1/participantes?select=talla&talla=not.is.null');
-      const solMap = {};
-      (pedidos || []).forEach(p => { solMap[p.talla] = (solMap[p.talla] || 0) + 1; });
-      headers = ['Talla','Solicitados'];
-      rows = ['XS','S','M','L','XL','XXL'].map(t => [t, solMap[t] || 0]);
-      filename = 'stock_tallas_jas2026.csv';
-    } else {
-      const fields = modo === 'estacas'
-        ? 'estaca,registrado'
-        : 'dni,nombre,cc,estaca,bus,mesa,salon,compania,talla,consejeros,habitacion,registrado';
-      data = await sbFetch(`/rest/v1/participantes?select=${fields}`);
-      headers = Object.keys(data[0] || {});
-      rows = data.map(r => headers.map(h => r[h] ?? ''));
-      filename = modo === 'estacas' ? 'estacas_jas2026.csv' : 'participantes_jas2026.csv';
-    }
-
-    const csv = [headers, ...rows].map(r => r.map(v => '"' + String(v).replace(/"/g,'""') + '"').join(',')).join('\n');
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = filename; a.click();
-    URL.revokeObjectURL(url);
-  } catch (e) {
-    alert('Error al exportar: ' + e.message);
-  }
-}
-
-document.getElementById('dni-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') buscarDNI();
-});
-
-document.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && document.getElementById('s-admin-login').classList.contains('active')) {
-    adminLogin();
-  }
-});
-
-// ════════════════════════════════════════
-// RENDER DASHBOARD (datos desde Supabase)
+// DASHBOARD
 // ════════════════════════════════════════
 async function renderDashboard() {
   try {
-    await Promise.all([renderGeneralStats(), renderStakes(), renderStock()]);
+    await Promise.all([renderGeneralStats(), renderStakes(), renderStock(), renderBuses()]);
   } catch (e) {
     console.error('Dashboard error:', e);
   }
 }
 
+// ════════════════════════════════════════
+// DASHBOARD — BUSES
+// ════════════════════════════════════════
+async function renderBuses() {
+  const BUSES = ['Bus 1','Bus 2','Bus 3','Bus 4','Bus 5'];
+  const TALLAS = ['XS','S','M','L','XL','XXL'];
+
+  try {
+    const data = await sbFetch('/rest/v1/participantes?select=estaca,cc,bus,talla_polo&bus=not.is.null');
+    if (!data || data.length === 0) {
+      document.getElementById('buses-estaca-list').innerHTML = '<div style="padding:18px;text-align:center;color:var(--gray-4);font-size:13px">Sin datos de buses aún.</div>';
+      document.getElementById('buses-tallas-list').innerHTML = '<div style="padding:18px;text-align:center;color:var(--gray-4);font-size:13px">Sin datos.</div>';
+      return;
+    }
+
+    // ── Conteo global por bus
+    const globalBus = {};
+    BUSES.forEach(b => globalBus[b] = 0);
+    data.forEach(p => { if (p.bus && globalBus[p.bus] !== undefined) globalBus[p.bus]++; });
+    BUSES.forEach((b, i) => {
+      const el = document.getElementById('db-b' + (i+1));
+      if (el) el.textContent = globalBus[b] || 0;
+    });
+
+    // ── Tabla: estaca × bus
+    const estacaMap = {};
+    data.forEach(p => {
+      if (!estacaMap[p.estaca]) estacaMap[p.estaca] = { cc: p.cc, buses: {} };
+      if (p.bus) estacaMap[p.estaca].buses[p.bus] = (estacaMap[p.estaca].buses[p.bus] || 0) + 1;
+    });
+
+    const estacas = Object.entries(estacaMap).sort((a,b) => a[0].localeCompare(b[0]));
+
+    const tableHTML = '<div style="overflow-x:auto"><table class="bus-table">' +
+      '<thead><tr><th>Estaca</th><th>CC</th>' +
+      BUSES.map(b => '<th>' + b + '</th>').join('') +
+      '<th>Total</th></tr></thead><tbody>' +
+      estacas.map(([nombre, v]) => {
+        const total = Object.values(v.buses).reduce((a,b) => a+b, 0);
+        return '<tr><td>' + nombre + '</td><td style="color:var(--gray-4);font-weight:400">' + v.cc + '</td>' +
+          BUSES.map(b => {
+            const n = v.buses[b] || 0;
+            return '<td><span class="bus-num-pill' + (n === 0 ? ' zero' : '') + '">' + (n || '—') + '</span></td>';
+          }).join('') +
+          '<td><strong>' + total + '</strong></td></tr>';
+      }).join('') +
+      '<tr style="background:var(--blue-lt)"><td colspan="2" style="font-weight:700;color:var(--blue)">TOTAL</td>' +
+      BUSES.map(b => '<td><strong style="color:var(--blue)">' + (globalBus[b] || 0) + '</strong></td>').join('') +
+      '<td><strong style="color:var(--blue)">' + data.length + '</strong></td></tr>' +
+      '</tbody></table></div>';
+
+    document.getElementById('buses-estaca-list').innerHTML = tableHTML;
+
+    // ── Tabla: tallas por bus (para kits)
+    const busTallaMap = {};
+    BUSES.forEach(b => { busTallaMap[b] = {}; TALLAS.forEach(t => busTallaMap[b][t] = 0); });
+    data.forEach(p => {
+      if (p.bus && p.talla_polo && busTallaMap[p.bus]) {
+        busTallaMap[p.bus][p.talla_polo] = (busTallaMap[p.bus][p.talla_polo] || 0) + 1;
+      }
+    });
+
+    const kitRows = BUSES.map(bus => {
+      const tallas = busTallaMap[bus];
+      const total = Object.values(tallas).reduce((a,b) => a+b, 0);
+      if (total === 0) return '';
+      const tallasHTML = TALLAS
+        .filter(t => tallas[t] > 0)
+        .map(t => '<span class="kit-badge">' + t + ': <span>' + tallas[t] + '</span></span>')
+        .join('');
+      return '<div class="kit-talla-row">' +
+        '<span class="kit-bus-label">' + bus + '</span>' +
+        '<div class="kit-tallas">' + tallasHTML + '</div>' +
+        '<span style="margin-left:auto;font-size:11px;color:var(--gray-3)">' + total + ' polos</span>' +
+        '</div>';
+    }).filter(Boolean).join('');
+
+    document.getElementById('buses-tallas-list').innerHTML = kitRows ||
+      '<div style="padding:18px;text-align:center;color:var(--gray-4);font-size:13px">Los participantes aún no han seleccionado bus.</div>';
+
+  } catch (err) {
+    document.getElementById('buses-estaca-list').innerHTML =
+      '<div style="padding:18px;color:var(--danger);font-size:13px">Error: ' + err.message + '</div>';
+  }
+}
+
 async function renderGeneralStats() {
-  // Leer headers para obtener conteos reales
   const [totalRes, regRes] = await Promise.all([
     fetch(SUPABASE_URL + '/rest/v1/participantes?select=count', {
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'count=exact', 'Range': '0-0' }
@@ -969,158 +1050,243 @@ async function renderGeneralStats() {
     }),
   ]);
 
-  const totalCount = parseInt(totalRes.headers.get('content-range')?.split('/')[1] || '0');
-  const regCount   = parseInt(regRes.headers.get('content-range')?.split('/')[1] || '0');
-  const pendCount  = totalCount - regCount;
-  const pct        = totalCount ? Math.round((regCount / totalCount) * 100) : 0;
+  const total = parseInt(totalRes.headers.get('content-range')?.split('/')[1] || '0');
+  const reg   = parseInt(regRes.headers.get('content-range')?.split('/')[1] || '0');
+  const pend  = total - reg;
+  const pct   = total ? Math.round((reg / total) * 100) : 0;
 
-  // Actualizar stat cards
-  const cards = document.querySelectorAll('#tab-general .stat-card .sc-val');
-  if (cards[0]) cards[0].textContent = totalCount.toLocaleString('es-PE');
-  if (cards[1]) cards[1].textContent = regCount.toLocaleString('es-PE');
-  if (cards[2]) cards[2].textContent = pendCount.toLocaleString('es-PE');
+  document.getElementById('d-total').textContent    = total.toLocaleString('es-PE');
+  document.getElementById('d-reg').textContent      = reg.toLocaleString('es-PE');
+  document.getElementById('d-pend').textContent     = pend.toLocaleString('es-PE');
+  document.getElementById('d-reg-pct').textContent  = pct + '%';
+  document.getElementById('d-pend-pct').textContent = (100 - pct) + '%';
+  document.getElementById('d-pct-g').textContent    = pct + '%';
+  document.getElementById('d-fill-g').style.width   = pct + '%';
+  document.getElementById('d-sub-g').textContent    = `${reg.toLocaleString('es-PE')} de ${total.toLocaleString('es-PE')} participantes completaron su registro`;
+  document.getElementById('d-pct-e').textContent    = pct + '%';
+  document.getElementById('d-fill-e').style.width   = pct + '%';
+  document.getElementById('d-sub-e').textContent    = `${reg.toLocaleString('es-PE')} registrados · ${pend.toLocaleString('es-PE')} pendientes`;
 
-  // Actualizar porcentajes
-  const pcts = document.querySelectorAll('#tab-general .stat-card .sc-pct');
-  if (pcts[0]) pcts[0].textContent = pct + '%';
-  if (pcts[1]) pcts[1].textContent = (100 - pct) + '%';
-
-  // Actualizar barra de progreso en tab-general
-  const fills = document.querySelectorAll('#tab-general .prog-fill');
-  const ptxts = document.querySelectorAll('#tab-general .prog-pct');
-  const psubs = document.querySelectorAll('#tab-general .prog-sub');
-  fills.forEach(f => f.style.width = pct + '%');
-  ptxts.forEach(t => t.textContent = pct + '%');
-  if (psubs[0]) psubs[0].textContent = `${regCount.toLocaleString('es-PE')} de ${totalCount.toLocaleString('es-PE')} participantes completaron su registro · 20 estacas`;
-
-  // Actualizar también tab-estacas barra global
-  const fills2 = document.querySelectorAll('#tab-estacas .prog-fill');
-  const ptxts2 = document.querySelectorAll('#tab-estacas .prog-pct');
-  const psubs2 = document.querySelectorAll('#tab-estacas .prog-sub');
-  fills2.forEach(f => f.style.width = pct + '%');
-  ptxts2.forEach(t => t.textContent = pct + '%');
-  if (psubs2[0]) psubs2[0].textContent = `${regCount.toLocaleString('es-PE')} registrados · ${pendCount.toLocaleString('es-PE')} pendientes`;
+  // Buses únicos en uso
+  const busData = await sbFetch('/rest/v1/participantes?select=bus&bus=not.is.null').catch(() => []);
+  const busesUnicos = new Set((busData || []).map(r => r.bus).filter(Boolean)).size;
+  document.getElementById('d-buses').textContent = busesUnicos;
 }
 
 async function renderStakes() {
   const container = document.getElementById('stake-list');
-  container.innerHTML = '<div style="padding:18px;text-align:center;color:var(--gray-4);font-size:13px">Cargando estacas…</div>';
-
   try {
-    // Agrupar por estaca: total y registrados
-    const data = await sbFetch(
-      '/rest/v1/participantes?select=estaca,registrado'
-    );
-
+    const data = await sbFetch('/rest/v1/participantes?select=estaca,registrado');
     if (!data || data.length === 0) {
-      container.innerHTML = '<div style="padding:18px;text-align:center;color:var(--gray-4);font-size:13px">Sin datos disponibles.</div>';
+      container.innerHTML = '<div style="padding:18px;text-align:center;color:var(--gray-4);font-size:13px">Sin datos.</div>';
       return;
     }
 
-    // Agrupar en JS
     const map = {};
     data.forEach(p => {
-      if (!map[p.estaca]) map[p.estaca] = { total: 0, registrados: 0 };
+      if (!map[p.estaca]) map[p.estaca] = { total: 0, reg: 0 };
       map[p.estaca].total++;
-      if (p.registrado) map[p.estaca].registrados++;
+      if (p.registrado) map[p.estaca].reg++;
     });
 
     const estacas = Object.entries(map)
       .map(([nombre, v]) => ({ nombre, ...v }))
-      .sort((a, b) => b.registrados / b.total - a.registrados / a.total);
+      .sort((a, b) => b.reg / b.total - a.reg / a.total);
 
     container.innerHTML = estacas.map((e, i) => {
-      const pct = e.total ? Math.round((e.registrados / e.total) * 100) : 0;
-      let barColor = '#0F7B6C';
-      if (pct < 60) barColor = '#E05C3A';
-      else if (pct < 80) barColor = '#C4821A';
+      const pct = e.total ? Math.round((e.reg / e.total) * 100) : 0;
+      const color = pct >= 80 ? '#0F7B6C' : pct >= 50 ? '#C4821A' : '#E05C3A';
       return `
         <div class="stake-row">
           <span class="stake-num">${i + 1}</span>
           <span class="stake-name">${e.nombre}</span>
           <div class="stake-bar-wrap">
-            <div class="stake-bar" style="width:${pct}%;background:${barColor}"></div>
+            <div class="stake-bar" style="width:${pct}%;background:${color}"></div>
           </div>
-          <span class="stake-count">${e.registrados}/${e.total}</span>
-          <span class="stake-pct" style="color:${barColor}">${pct}%</span>
+          <span class="stake-count">${e.reg}/${e.total}</span>
+          <span class="stake-pct" style="color:${color}">${pct}%</span>
         </div>`;
     }).join('');
 
   } catch (err) {
-    container.innerHTML = '<div style="padding:18px;color:var(--danger);font-size:13px">Error al cargar estacas: ' + err.message + '</div>';
+    container.innerHTML = `<div style="padding:18px;color:var(--danger);font-size:13px">Error: ${err.message}</div>`;
   }
 }
 
 async function renderStock() {
   const container = document.getElementById('stock-list');
-  container.innerHTML = '<div style="padding:18px;text-align:center;color:var(--gray-4);font-size:13px">Cargando stock…</div>';
-
   try {
-    // Contar tallas registradas y disponibles
-    const [pedidos, disponibles] = await Promise.all([
-      sbFetch('/rest/v1/participantes?select=talla&talla=not.is.null'),
-      sbFetch('/rest/v1/stock_polos?select=talla,disponibles').catch(() => null),
+    const [pedidos, stockData] = await Promise.all([
+      sbFetch('/rest/v1/participantes?select=talla_polo&talla_polo=not.is.null'),
+      sbFetch('/rest/v1/stock_polos?select=talla,total').catch(() => null),
     ]);
 
-    // Contar solicitados por talla
     const solMap = {};
     (pedidos || []).forEach(p => {
-      solMap[p.talla] = (solMap[p.talla] || 0) + 1;
+      if (p.talla_polo) solMap[p.talla_polo] = (solMap[p.talla_polo] || 0) + 1;
     });
 
-    // Si no existe tabla stock_polos, usamos solo solicitados
-    const TALLAS = ['XS','S','M','L','XL','XXL'];
-    const dispMap = {};
-    if (disponibles) {
-      disponibles.forEach(r => { dispMap[r.talla] = r.disponibles; });
-    }
+    const totalMap = {};
+    if (stockData) stockData.forEach(r => { totalMap[r.talla] = r.total; });
 
-    const stockData = TALLAS.map(talla => ({
-      talla,
-      solicitados: solMap[talla] || 0,
-      disponibles: dispMap[talla] || null,
-    }));
+    let okCount = 0, bajoCount = 0, agotCount = 0;
+    let alertaTextos = [];
 
-    container.innerHTML = stockData.map(s => {
-      const sol = s.solicitados;
-      const disp = s.disponibles;
-      const pct = disp ? Math.min(100, Math.round((sol / disp) * 100)) : 100;
-      const restante = disp !== null ? disp - sol : null;
+    const rows = TODAS_TALLAS.map(talla => {
+      const sol   = solMap[talla] || 0;
+      const total = totalMap[talla];
+      const rest  = (total !== undefined) ? total - sol : null;
+      const pct   = total ? Math.min(100, Math.round((sol / total) * 100)) : 100;
+
       let pill, barColor;
-      if (disp === null) {
+      if (rest === null) {
         pill = `<span class="stock-pill pill-ok">${sol} pedidos</span>`;
-        barColor = '#1B3A6B';
-      } else if (restante > 10) {
-        pill = '<span class="stock-pill pill-ok">OK</span>';
-        barColor = '#0F7B6C';
-      } else if (restante >= 0) {
-        pill = '<span class="stock-pill pill-warn">⚠ Stock bajo</span>';
-        barColor = '#C4821A';
+        barColor = '#1B3A6B'; okCount++;
+      } else if (rest > 10) {
+        pill = '<span class="stock-pill pill-ok">✓ OK</span>';
+        barColor = '#0F7B6C'; okCount++;
+      } else if (rest > 0) {
+        pill = `<span class="stock-pill pill-warn">⚠ Quedan ${rest}</span>`;
+        barColor = '#C4821A'; bajoCount++;
+        alertaTextos.push(`Talla ${talla}: solo ${rest} disponibles`);
       } else {
-        pill = '<span class="stock-pill pill-danger">🔴 Sin stock</span>';
-        barColor = '#C0392B';
+        pill = '<span class="stock-pill pill-danger">🔴 Agotado</span>';
+        barColor = '#C0392B'; agotCount++;
+        alertaTextos.push(`Talla ${talla}: AGOTADA`);
       }
-      const subText = disp !== null
-        ? `Solicitados: ${sol} · Disponibles: ${disp} · Restante: ${restante}`
-        : `Solicitados: ${sol}`;
+
+      const sub = rest !== null
+        ? `Pedidos: ${sol} · Total: ${total} · Disponibles: ${Math.max(0, rest)}`
+        : `Pedidos: ${sol}`;
+
       return `
         <div class="stock-row">
-          <div class="stock-talla">${s.talla}</div>
+          <div class="stock-talla">${talla}</div>
           <div class="stock-info">
-            <div class="si-name">Talla ${s.talla}</div>
-            <div class="si-sub">${subText}</div>
+            <div class="si-name">Talla ${talla}</div>
+            <div class="si-sub">${sub}</div>
             <div class="si-bar-wrap">
               <div class="si-bar" style="width:${pct}%;background:${barColor}"></div>
             </div>
           </div>
           ${pill}
         </div>`;
-    }).join('');
+    });
+
+    container.innerHTML = rows.join('');
+
+    document.getElementById('d-s-ok').textContent   = okCount;
+    document.getElementById('d-s-bajo').textContent = bajoCount;
+    document.getElementById('d-s-agot').textContent = agotCount;
+    document.getElementById('d-stock-alerta').textContent = bajoCount + agotCount;
+
+    const banner = document.getElementById('stock-alerta-banner');
+    if (alertaTextos.length > 0) {
+      banner.textContent = '⚠ ' + alertaTextos.join(' · ');
+      banner.classList.remove('hidden');
+    } else {
+      banner.classList.add('hidden');
+    }
 
   } catch (err) {
-    container.innerHTML = '<div style="padding:18px;color:var(--danger);font-size:13px">Error al cargar stock: ' + err.message + '</div>';
+    container.innerHTML = `<div style="padding:18px;color:var(--danger);font-size:13px">Error al cargar stock: ${err.message}</div>`;
   }
 }
+
+// ════════════════════════════════════════
+// EXPORTAR CSV
+// ════════════════════════════════════════
+async function exportarCSV(modo) {
+  try {
+    let headers, rows, filename;
+
+    if (modo === 'stock') {
+      const [pedidos, stockData] = await Promise.all([
+        sbFetch('/rest/v1/participantes?select=talla_polo&talla_polo=not.is.null'),
+        sbFetch('/rest/v1/stock_polos?select=talla,total').catch(() => null),
+      ]);
+      const solMap = {};
+      (pedidos || []).forEach(p => { if (p.talla_polo) solMap[p.talla_polo] = (solMap[p.talla_polo] || 0) + 1; });
+      const totalMap = {};
+      if (stockData) stockData.forEach(r => { totalMap[r.talla] = r.total; });
+      headers = ['Talla', 'Total stock', 'Pedidos', 'Disponibles'];
+      rows = TODAS_TALLAS.map(t => {
+        const sol = solMap[t] || 0;
+        const total = totalMap[t] || '—';
+        const disp = (typeof total === 'number') ? total - sol : '—';
+        return [t, total, sol, disp];
+      });
+      filename = 'stock_tallas_jas2026.csv';
+    } else if (modo === 'buses') {
+      const data = await sbFetch('/rest/v1/participantes?select=estaca,cc,bus,talla_polo&bus=not.is.null');
+      const BUSES = ['Bus 1','Bus 2','Bus 3','Bus 4','Bus 5'];
+      const TALLAS = ['XS','S','M','L','XL','XXL'];
+      // Sheet 1: estaca x bus
+      headers = ['Estaca', 'CC', ...BUSES, 'Total'];
+      const estacaMap = {};
+      (data||[]).forEach(p => {
+        if (!estacaMap[p.estaca]) estacaMap[p.estaca] = { cc: p.cc, buses: {} };
+        if (p.bus) estacaMap[p.estaca].buses[p.bus] = (estacaMap[p.estaca].buses[p.bus]||0)+1;
+      });
+      rows = Object.entries(estacaMap).map(([nombre,v]) => [
+        nombre, v.cc,
+        ...BUSES.map(b => v.buses[b]||0),
+        BUSES.reduce((s,b) => s+(v.buses[b]||0),0)
+      ]);
+      // Add tallas section
+      rows.push([]);
+      rows.push(['BUS', ...TALLAS, 'TOTAL']);
+      const busTallaMap = {};
+      BUSES.forEach(b => { busTallaMap[b]={}; TALLAS.forEach(t => busTallaMap[b][t]=0); });
+      (data||[]).forEach(p => { if(p.bus&&p.talla_polo&&busTallaMap[p.bus]) busTallaMap[p.bus][p.talla_polo]=(busTallaMap[p.bus][p.talla_polo]||0)+1; });
+      BUSES.forEach(b => rows.push([b,...TALLAS.map(t=>busTallaMap[b][t]||0),TALLAS.reduce((s,t)=>s+(busTallaMap[b][t]||0),0)]));
+      filename = 'buses_kits_jas2026.csv';
+    } else if (modo === 'estacas') {
+      const data = await sbFetch('/rest/v1/participantes?select=estaca,registrado');
+      headers = ['Estaca', 'Total', 'Registrados', 'Pendientes', '% Avance'];
+      const map = {};
+      (data || []).forEach(p => {
+        if (!map[p.estaca]) map[p.estaca] = { total: 0, reg: 0 };
+        map[p.estaca].total++;
+        if (p.registrado) map[p.estaca].reg++;
+      });
+      rows = Object.entries(map).map(([nombre, v]) => [
+        nombre, v.total, v.reg, v.total - v.reg,
+        v.total ? Math.round((v.reg / v.total) * 100) + '%' : '0%'
+      ]);
+      filename = 'estacas_jas2026.csv';
+    } else {
+      const data = await sbFetch('/rest/v1/participantes?select=dni,nombre,cc,estaca,bus,mesa,salon,compania,talla_polo,consejeros,habitacion,registrado');
+      headers = ['DNI', 'Nombre', 'CC', 'Estaca', 'Bus', 'Mesa', 'Salón', 'Compañía', 'Talla Polo', 'Consejeros', 'Habitación', 'Registrado'];
+      rows = (data || []).map(r => [r.dni, r.nombre, r.cc, r.estaca, r.bus, r.mesa, r.salon, r.compania, r.talla_polo, r.consejeros, r.habitacion, r.registrado ? 'Sí' : 'No']);
+      filename = 'participantes_jas2026.csv';
+    }
+
+    const csv = [headers, ...rows]
+      .map(r => r.map(v => '"' + String(v ?? '').replace(/"/g, '""') + '"').join(','))
+      .join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename; a.click();
+    URL.revokeObjectURL(url);
+
+  } catch (e) {
+    alert('Error al exportar: ' + e.message);
+  }
+}
+
+// ════════════════════════════════════════
+// ATAJOS DE TECLADO
+// ════════════════════════════════════════
+document.getElementById('dni-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') buscarDNI();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('s-admin-login').classList.contains('active')) {
+    adminLogin();
+  }
+});
 </script>
 </body>
 </html>
