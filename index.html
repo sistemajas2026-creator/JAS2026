@@ -302,7 +302,6 @@
 <div id="s-login" class="screen active">
   <div class="hero">
     <div class="hero-logo">JAS<span>·</span>2026</div>
-    <div class="hero-tagline">Juventud · Aventura · Servicio</div>
     <div class="hero-pill">Centro Vacacional Huampaní · 1,200 participantes</div>
   </div>
   <div class="login-cards">
@@ -638,7 +637,7 @@
 // SUPABASE CONFIG
 // ════════════════════════════════════════
 const SUPABASE_URL = 'https://nhrvwzmnkfbbgntfggwu.supabase.co';
-const SUPABASE_KEY = 'sb_secret_sUGNPICmpoXBj1DMI9M3HA_AJ6ToZg9';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ocnZ3em1ua2ZiYmdudGZnZ3d1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwOTI4MDksImV4cCI6MjA5NjY2ODgwOX0.X7kCLzza6qvozXTOixElBKH8DMdjS_TQzfyr0iAoocM';
 
 async function sbFetch(path, options = {}) {
   const res = await fetch(SUPABASE_URL + path, {
@@ -890,14 +889,6 @@ async function renderDashboard() {
 }
 
 async function renderGeneralStats() {
-  // Total inscritos
-  const total = await sbFetch('/rest/v1/participantes?select=count', { headers: { 'Prefer': 'count=exact', 'Range': '0-0' } })
-    .catch(() => null);
-
-  // Registrados (talla confirmada)
-  const regData = await sbFetch('/rest/v1/participantes?registrado=eq.true&select=count', { headers: { 'Prefer': 'count=exact', 'Range': '0-0' } })
-    .catch(() => null);
-
   // Leer headers para obtener conteos reales
   const [totalRes, regRes] = await Promise.all([
     fetch(SUPABASE_URL + '/rest/v1/participantes?select=count', {
