@@ -361,25 +361,45 @@
   <div class="form-body">
     <div class="alert alert-ok" id="form-bienvenida"></div>
 
+    <div class="ficha-grid" style="border-radius:var(--r-sm);overflow:hidden;border:1px solid var(--gray-2)">
+      <div class="fc accent">
+        <div class="fc-label">DNI</div>
+        <div class="fc-val" id="pf-dni"></div>
+      </div>
+      <div class="fc accent">
+        <div class="fc-label">Estaca</div>
+        <div class="fc-val" id="pf-estaca"></div>
+      </div>
+      <div class="fc full">
+        <div class="fc-label">Nombre</div>
+        <div class="fc-val" id="pf-nombre"></div>
+      </div>
+      <div class="fc full">
+        <div class="fc-label">Compañía / Curso</div>
+        <div class="fc-val" id="pf-cc"></div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>N.° de Bus</label>
+      <select id="f-bus">
+        <option value="">— Selecciona tu bus —</option>
+        <option value="1">Bus 1</option>
+        <option value="2">Bus 2</option>
+        <option value="3">Bus 3</option>
+        <option value="4">Bus 4</option>
+        <option value="5">Bus 5</option>
+      </select>
+    </div>
+
     <div class="field">
       <label>Talla de polo</label>
       <select id="f-talla">
-        <option value="">— Selecciona tu talla —</option>
-        <option value="XS">XS</option>
-        <option value="S">S</option>
-        <option value="M">M</option>
-        <option value="L">L</option>
-        <option value="XL">XL</option>
-        <option value="XXL">XXL</option>
+        <option value="">— Cargando tallas disponibles… —</option>
       </select>
     </div>
 
     <div id="stock-warn" class="alert alert-warn hidden"></div>
-
-    <div class="field">
-      <label>¿Necesidad especial? <span style="font-weight:400">(opcional)</span></label>
-      <input type="text" id="f-necesidad" placeholder="Ej. alergia, movilidad reducida…">
-    </div>
 
     <div class="spacer"></div>
     <button class="btn btn-gold" onclick="confirmarRegistro()">Confirmar y ver mi ficha →</button>
@@ -712,10 +732,16 @@ async function buscarDNI() {
     currentParticipante = p;
 
     document.getElementById('form-bienvenida').textContent =
-      '¡Hola, ' + p.nombre.split(' ')[0] + '! Encontramos tus datos. Solo confirma tu talla de polo para completar el registro.';
-    document.getElementById('f-talla').value = p.talla || '';
-    document.getElementById('f-necesidad').value = p.necesidad || '';
+      '¡Hola, ' + p.nombre.split(' ')[0] + '! Verifica tus datos, elige tu bus y tu talla de polo.';
+    document.getElementById('pf-dni').textContent     = p.dni;
+    document.getElementById('pf-nombre').textContent  = p.nombre;
+    document.getElementById('pf-cc').textContent      = p.cc;
+    document.getElementById('pf-estaca').textContent  = p.estaca;
+    document.getElementById('f-bus').value   = p.bus || '';
     document.getElementById('stock-warn').classList.add('hidden');
+
+    await cargarTallasDisponibles(p.talla || '');
+
     go('s-participante-form');
 
   } catch (e) {
@@ -727,23 +753,68 @@ async function buscarDNI() {
   }
 }
 
-document.getElementById('f-talla').addEventListener('change', function() {
-  const warnEl = document.getElementById('stock-warn');
-  const talla = this.value;
-  const s = STOCK.find(x => x.talla === talla);
-  if (s && s.disponibles <= s.solicitados) {
-    warnEl.textContent = '⚠ La talla ' + talla + ' tiene stock limitado. Si no hay disponibilidad al momento de recoger, recibirás la talla más cercana.';
-    warnEl.classList.remove('hidden');
-  } else {
-    warnEl.classList.add('hidden');
+// ════════════════════════════════════════
+// STOCK DE TALLAS
+// ════════════════════════════════════════
+const TODAS_TALLAS = ['XS','S','M','L','XL','XXL'];
+
+async function cargarTallasDisponibles(tallaActual) {
+  const select = document.getElementById('f-talla');
+  select.innerHTML = '<option value="">— Cargando tallas disponibles… —</option>';
+  document.getElementById('stock-warn').classList.add('hidden');
+
+  try {
+    const [pedidos, stockData] = await Promise.all([
+      sbFetch('/rest/v1/participantes?select=talla&talla=not.is.null'),
+      sbFetch('/rest/v1/stock_polos?select=talla,disponibles').catch(() => null),
+    ]);
+
+    const solMap = {};
+    (pedidos || []).forEach(p => { solMap[p.talla] = (solMap[p.talla] || 0) + 1; });
+
+    const dispMap = {};
+    if (stockData) stockData.forEach(r => { dispMap[r.talla] = r.disponibles; });
+
+    let opciones = '<option value="">— Selecciona tu talla —</option>';
+    let hayDisponibles = false;
+
+    TODAS_TALLAS.forEach(t => {
+      const disp = dispMap[t];
+      const sol = solMap[t] || 0;
+      // Si la talla actual del participante ya es esta, no contarla como "ocupando" cupo
+      const solAjustado = (t === tallaActual) ? Math.max(0, sol - 1) : sol;
+      const sinStock = (disp !== undefined && disp !== null) ? (solAjustado >= disp) : false;
+
+      if (sinStock && t !== tallaActual) {
+        return; // se elimina la opción
+      }
+      hayDisponibles = true;
+      const sel = (t === tallaActual) ? ' selected' : '';
+      const etiqueta = sinStock ? `${t} (último disponible)` : t;
+      opciones += `<option value="${t}"${sel}>${etiqueta}</option>`;
+    });
+
+    select.innerHTML = opciones;
+
+    if (!hayDisponibles) {
+      const warnEl = document.getElementById('stock-warn');
+      warnEl.textContent = '⚠ No hay tallas disponibles en stock. Consulta con el staff de logística.';
+      warnEl.classList.remove('hidden');
+    }
+  } catch (e) {
+    select.innerHTML = '<option value="">— Error al cargar tallas —</option>';
   }
-});
+}
 
 async function confirmarRegistro() {
+  const bus = document.getElementById('f-bus').value;
   const talla = document.getElementById('f-talla').value;
-  const necesidad = document.getElementById('f-necesidad').value.trim();
   const btn = document.querySelector('#s-participante-form .btn-gold');
 
+  if (!bus) {
+    alert('Por favor selecciona tu número de bus.');
+    return;
+  }
   if (!talla) {
     alert('Por favor selecciona tu talla de polo.');
     return;
@@ -753,28 +824,27 @@ async function confirmarRegistro() {
   btn.disabled = true;
 
   try {
-    // Guardar talla (y necesidad si existe) en Supabase
     await sbFetch(
       `/rest/v1/participantes?dni=eq.${encodeURIComponent(currentParticipante.dni)}`,
       {
         method: 'PATCH',
         prefer: 'return=minimal',
         body: JSON.stringify({
+          bus,
           talla,
-          ...(necesidad ? { necesidad } : {}),
           registrado: true,
         }),
       }
     );
 
-    currentParticipante.talla    = talla;
-    currentParticipante.necesidad = necesidad;
+    currentParticipante.bus   = bus;
+    currentParticipante.talla = talla;
 
     // Rellenar ficha
     document.getElementById('fc-nombre').textContent     = currentParticipante.nombre;
     document.getElementById('fc-cc').textContent         = currentParticipante.cc;
     document.getElementById('fc-estaca').textContent     = currentParticipante.estaca;
-    document.getElementById('fc-bus').textContent        = currentParticipante.bus;
+    document.getElementById('fc-bus').textContent        = bus;
     document.getElementById('fc-mesa').textContent       = currentParticipante.mesa;
     document.getElementById('fc-salon').textContent      = currentParticipante.salon;
     document.getElementById('fc-compania').textContent   = currentParticipante.compania;
@@ -849,7 +919,7 @@ async function exportarCSV(modo) {
     } else {
       const fields = modo === 'estacas'
         ? 'estaca,registrado'
-        : 'dni,nombre,cc,estaca,bus,mesa,salon,compania,talla,consejeros,habitacion,registrado,necesidad';
+        : 'dni,nombre,cc,estaca,bus,mesa,salon,compania,talla,consejeros,habitacion,registrado';
       data = await sbFetch(`/rest/v1/participantes?select=${fields}`);
       headers = Object.keys(data[0] || {});
       rows = data.map(r => headers.map(h => r[h] ?? ''));
