@@ -739,44 +739,32 @@ async function cargarTallasDisponibles(tallaActual) {
     if (stockData) stockData.forEach(r => { totalMap[r.talla] = r.disponibles; });
 
     let opciones = '<option value="">— Selecciona tu talla —</option>';
-    let hayDisponibles = false;
-    let agotadas = [];
+    let tallaActualAgotada = false;
+    const warnEl = document.getElementById('stock-warn');
+    warnEl.classList.add('hidden');
 
     TODAS_TALLAS.forEach(t => {
       const total = totalMap[t];
-      const sol = solMap[t] || 0;
-      // Si el participante ya tiene esta talla, no la contamos como ocupada
+      const sol   = solMap[t] || 0;
+      // Si es la talla que ya tenía, no la contamos como un pedido nuevo
       const solAjustado = (t === tallaActual) ? Math.max(0, sol - 1) : sol;
-      const restante = (total !== undefined) ? total - solAjustado : null;
-      const sinStock = (restante !== null) && restante <= 0;
+      const restante    = (total !== undefined) ? total - solAjustado : null;
+      const sinStock    = restante !== null && restante <= 0;
 
-      if (sinStock && t !== tallaActual) {
-        agotadas.push(t);
-        return; // no mostrar en select
+      if (sinStock) {
+        // Si era su talla guardada, avisamos pero no la mostramos
+        if (t === tallaActual) tallaActualAgotada = true;
+        return; // no aparece en el select
       }
 
-      hayDisponibles = true;
       const sel = (t === tallaActual) ? ' selected' : '';
-      let etiqueta = t;
-      if (restante !== null && restante <= 10 && restante > 0) {
-        etiqueta = `${t} (últimos ${restante})`;
-      } else if (t === tallaActual && sinStock) {
-        etiqueta = `${t} (tu talla actual)`;
-      }
-      opciones += `<option value="${t}"${sel}>${etiqueta}</option>`;
+      opciones += `<option value="${t}"${sel}>${t}</option>`;
     });
 
     select.innerHTML = opciones;
 
-    if (agotadas.length > 0) {
-      const warnEl = document.getElementById('stock-warn');
-      warnEl.textContent = `⚠ Tallas agotadas: ${agotadas.join(', ')}. Consulta con el staff de logística.`;
-      warnEl.classList.remove('hidden');
-    }
-
-    if (!hayDisponibles) {
-      const warnEl = document.getElementById('stock-warn');
-      warnEl.textContent = '⚠ No hay tallas disponibles en este momento. Consulta con el staff.';
+    if (tallaActualAgotada) {
+      warnEl.textContent = '⚠ Tu talla registrada ya no tiene stock. Por favor selecciona otra talla disponible.';
       warnEl.classList.remove('hidden');
     }
 
