@@ -872,54 +872,22 @@ async function confirmarRegistro() {
       return;
     }
 
-    // ── 2. Intentar descontar stock y registrar en una sola operación ──────
-    // Primero actualizamos el participante
-    await sbFetch(
-      `/rest/v1/participantes?dni=eq.${encodeURIComponent(currentParticipante.dni)}`,
-      {
-        method: 'PATCH',
-        prefer: 'return=minimal',
-        body: JSON.stringify({ bus, talla_polo: talla, registrado: true }),
-      }
-    );
+    // ── 2. Transacción atómica vía RPC (descuenta stock + registra participante) ──
+    const resultado = await sbFetch('/rest/v1/rpc/confirmar_registro', {
+      method: 'POST',
+      body: JSON.stringify({
+        p_dni:       currentParticipante.dni,
+        p_bus:       bus,
+        p_talla:     talla,
+        p_talla_ant: tallaAnterior || null,
+      }),
+    });
 
-    // Luego descontamos 1 unidad del stock de la talla seleccionada
-    // Si la talla cambió, solo descontamos si hay registro de stock para esa talla
-    if (totalMap[talla] !== undefined) {
-      const stockActual = totalMap[talla];
-
-      // Verificación final: re-leer stock directo antes de decrementar
-      const stockFinal = await sbFetch(
-        `/rest/v1/stock_polos?select=disponibles&talla=eq.${encodeURIComponent(talla)}&limit=1`
-      ).catch(() => null);
-
-      const disponiblesActuales = stockFinal?.[0]?.disponibles ?? stockActual;
-
-      if (disponiblesActuales <= 0) {
-        // Revertir el registro del participante
-        await sbFetch(
-          `/rest/v1/participantes?dni=eq.${encodeURIComponent(currentParticipante.dni)}`,
-          {
-            method: 'PATCH',
-            prefer: 'return=minimal',
-            body: JSON.stringify({ bus, talla_polo: tallaAnterior || null, registrado: false }),
-          }
-        ).catch(() => {});
-        warnEl.textContent = `La talla ${talla} acaba de agotarse (otro usuario tomó la última unidad). Por favor selecciona otra talla.`;
-        warnEl.classList.remove('hidden');
-        await cargarTallasDisponibles(tallaAnterior);
-        return;
-      }
-
-      // Decrementar stock (optimistic: disponibles - 1)
-      await sbFetch(
-        `/rest/v1/stock_polos?talla=eq.${encodeURIComponent(talla)}`,
-        {
-          method: 'PATCH',
-          prefer: 'return=minimal',
-          body: JSON.stringify({ disponibles: disponiblesActuales - 1 }),
-        }
-      );
+    if (!resultado?.ok) {
+      warnEl.textContent = `La talla ${talla} acaba de agotarse (otro usuario tomó la última unidad). Por favor selecciona otra talla.`;
+      warnEl.classList.remove('hidden');
+      await cargarTallasDisponibles(tallaAnterior);
+      return;
     }
 
     // ── 3. Actualizar estado local y navegar a la ficha ────────────────────
