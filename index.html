@@ -725,7 +725,7 @@ async function cargarTallasDisponibles(tallaActual) {
   try {
     const [pedidos, stockData] = await Promise.all([
       sbFetch('/rest/v1/participantes?select=talla_polo&talla_polo=not.is.null'),
-      sbFetch('/rest/v1/stock_polos?select=talla,total').catch(() => null),
+      sbFetch('/rest/v1/stock_polos?select=talla,disponibles').catch(() => null),
     ]);
 
     // Contar cuántos ya pidieron cada talla
@@ -736,7 +736,7 @@ async function cargarTallasDisponibles(tallaActual) {
 
     // Mapa de stock disponible
     const totalMap = {};
-    if (stockData) stockData.forEach(r => { totalMap[r.talla] = r.total; });
+    if (stockData) stockData.forEach(r => { totalMap[r.talla] = r.disponibles; });
 
     let opciones = '<option value="">— Selecciona tu talla —</option>';
     let hayDisponibles = false;
@@ -809,7 +809,7 @@ async function confirmarRegistro() {
     // Verificar stock una vez más antes de guardar (anti race condition)
     const [pedidos, stockData] = await Promise.all([
       sbFetch('/rest/v1/participantes?select=talla_polo&talla_polo=not.is.null'),
-      sbFetch('/rest/v1/stock_polos?select=talla,total').catch(() => null),
+      sbFetch('/rest/v1/stock_polos?select=talla,disponibles').catch(() => null),
     ]);
 
     const solMap = {};
@@ -817,7 +817,7 @@ async function confirmarRegistro() {
       if (p.talla_polo) solMap[p.talla_polo] = (solMap[p.talla_polo] || 0) + 1;
     });
     const totalMap = {};
-    if (stockData) stockData.forEach(r => { totalMap[r.talla] = r.total; });
+    if (stockData) stockData.forEach(r => { totalMap[r.talla] = r.disponibles; });
 
     const tallaAnterior = currentParticipante.talla_polo || '';
     const solAjustado = (talla === tallaAnterior)
@@ -1178,7 +1178,7 @@ async function renderStock() {
   try {
     const [pedidos, stockData] = await Promise.all([
       sbFetch('/rest/v1/participantes?select=talla_polo&talla_polo=not.is.null'),
-      sbFetch('/rest/v1/stock_polos?select=talla,total').catch(() => null),
+      sbFetch('/rest/v1/stock_polos?select=talla,disponibles').catch(() => null),
     ]);
 
     const solMap = {};
@@ -1187,7 +1187,7 @@ async function renderStock() {
     });
 
     const totalMap = {};
-    if (stockData) stockData.forEach(r => { totalMap[r.talla] = r.total; });
+    if (stockData) stockData.forEach(r => { totalMap[r.talla] = r.disponibles; });
 
     let okCount = 0, bajoCount = 0, agotCount = 0;
     let alertaTextos = [];
@@ -1263,12 +1263,12 @@ async function exportarCSV(modo) {
     if (modo === 'stock') {
       const [pedidos, stockData] = await Promise.all([
         sbFetch('/rest/v1/participantes?select=talla_polo&talla_polo=not.is.null'),
-        sbFetch('/rest/v1/stock_polos?select=talla,total').catch(() => null),
+        sbFetch('/rest/v1/stock_polos?select=talla,disponibles').catch(() => null),
       ]);
       const solMap = {};
       (pedidos || []).forEach(p => { if (p.talla_polo) solMap[p.talla_polo] = (solMap[p.talla_polo] || 0) + 1; });
       const totalMap = {};
-      if (stockData) stockData.forEach(r => { totalMap[r.talla] = r.total; });
+      if (stockData) stockData.forEach(r => { totalMap[r.talla] = r.disponibles; });
       headers = ['Talla', 'Total stock', 'Pedidos', 'Disponibles'];
       rows = TODAS_TALLAS.map(t => {
         const sol = solMap[t] || 0;
