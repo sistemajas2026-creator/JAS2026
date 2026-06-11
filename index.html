@@ -341,7 +341,7 @@
 
     <div class="field">
       <label>Talla de polo</label>
-      <select id="f-talla">
+      <select id="f-talla" onchange="alCambiarTalla()">
         <option value="">— Cargando tallas disponibles… —</option>
       </select>
     </div>
@@ -717,71 +717,122 @@ async function buscarDNI() {
 // ════════════════════════════════════════
 const TODAS_TALLAS = ['XS','S','M','L','XL','XXL'];
 
+// Caché de stock para reutilizar en validaciones
+let _stockCache = null; // { totalMap, solMap, timestamp }
+
+async function obtenerStock(forzar = false) {
+  const CACHE_TTL = 15000; // 15 segundos
+  const ahora = Date.now();
+  if (!forzar && _stockCache && (ahora - _stockCache.timestamp) < CACHE_TTL) {
+    return _stockCache;
+  }
+  const [pedidos, stockData] = await Promise.all([
+    sbFetch('/rest/v1/participantes?select=talla_polo&talla_polo=not.is.null'),
+    sbFetch('/rest/v1/stock_polos?select=talla,disponibles').catch(() => null),
+  ]);
+  const solMap = {};
+  (pedidos || []).forEach(p => {
+    if (p.talla_polo) solMap[p.talla_polo] = (solMap[p.talla_polo] || 0) + 1;
+  });
+  const totalMap = {};
+  if (stockData) stockData.forEach(r => { totalMap[r.talla] = r.disponibles; });
+  _stockCache = { solMap, totalMap, timestamp: Date.now() };
+  return _stockCache;
+}
+
+// Calcula stock restante para una talla, descontando el pedido anterior del participante si aplica
+function calcularRestante(talla, solMap, totalMap, tallaAnterior) {
+  const total = totalMap[talla];
+  if (total === undefined) return null; // sin datos de stock → no restringir
+  const sol = solMap[talla] || 0;
+  const solAjustado = (talla === tallaAnterior) ? Math.max(0, sol - 1) : sol;
+  return total - solAjustado;
+}
+
 async function cargarTallasDisponibles(tallaActual) {
   const select = document.getElementById('f-talla');
   select.innerHTML = '<option value="">— Cargando tallas… —</option>';
-  document.getElementById('stock-warn').classList.add('hidden');
+  select.disabled = true;
+  const warnEl = document.getElementById('stock-warn');
+  warnEl.classList.add('hidden');
 
   try {
-    const [pedidos, stockData] = await Promise.all([
-      sbFetch('/rest/v1/participantes?select=talla_polo&talla_polo=not.is.null'),
-      sbFetch('/rest/v1/stock_polos?select=talla,total').catch(() => null),
-    ]);
-
-    // Contar cuántos ya pidieron cada talla
-    const solMap = {};
-    (pedidos || []).forEach(p => {
-      if (p.talla_polo) solMap[p.talla_polo] = (solMap[p.talla_polo] || 0) + 1;
-    });
-
-    // Mapa de stock disponible
-    const totalMap = {};
-    if (stockData) stockData.forEach(r => { totalMap[r.talla] = r.total; });
+    // Forzar consulta fresca al cargar el formulario
+    const { solMap, totalMap } = await obtenerStock(true);
 
     let opciones = '<option value="">— Selecciona tu talla —</option>';
-    let hayDisponibles = false;
-    let agotadas = [];
+    let tallaActualAgotada = false;
 
     TODAS_TALLAS.forEach(t => {
-      const total = totalMap[t];
-      const sol = solMap[t] || 0;
-      // Si el participante ya tiene esta talla, no la contamos como ocupada
-      const solAjustado = (t === tallaActual) ? Math.max(0, sol - 1) : sol;
-      const restante = (total !== undefined) ? total - solAjustado : null;
-      const sinStock = (restante !== null) && restante <= 0;
+      const restante = calcularRestante(t, solMap, totalMap, tallaActual);
+      const sinStock = restante !== null && restante <= 0;
 
-      if (sinStock && t !== tallaActual) {
-        agotadas.push(t);
-        return; // no mostrar en select
+      if (sinStock) {
+        // Mostrar deshabilitada con indicación de agotado
+        const esSuTalla = t === tallaActual;
+        if (esSuTalla) tallaActualAgotada = true;
+        opciones += `<option value="${t}" disabled>${t} (agotado)</option>`;
+        return;
       }
 
-      hayDisponibles = true;
       const sel = (t === tallaActual) ? ' selected' : '';
-      let etiqueta = t;
-      if (restante !== null && restante <= 10 && restante > 0) {
-        etiqueta = `${t} (últimos ${restante})`;
-      } else if (t === tallaActual && sinStock) {
-        etiqueta = `${t} (tu talla actual)`;
-      }
-      opciones += `<option value="${t}"${sel}>${etiqueta}</option>`;
+      opciones += `<option value="${t}"${sel}>${t}</option>`;
     });
 
     select.innerHTML = opciones;
+    select.disabled = false;
 
-    if (agotadas.length > 0) {
-      const warnEl = document.getElementById('stock-warn');
-      warnEl.textContent = `⚠ Tallas agotadas: ${agotadas.join(', ')}. Consulta con el staff de logística.`;
+    if (tallaActualAgotada) {
+      warnEl.textContent = '⚠ Tu talla registrada ya no tiene stock. Por favor selecciona otra talla disponible.';
       warnEl.classList.remove('hidden');
-    }
-
-    if (!hayDisponibles) {
-      const warnEl = document.getElementById('stock-warn');
-      warnEl.textContent = '⚠ No hay tallas disponibles en este momento. Consulta con el staff.';
-      warnEl.classList.remove('hidden');
+    } else if (tallaActual && select.value === tallaActual) {
+      // Talla cargada OK — consultar stock de esa talla
+      await verificarStockTallaSeleccionada(tallaActual, solMap, totalMap);
     }
 
   } catch (e) {
     select.innerHTML = '<option value="">— Error al cargar tallas —</option>';
+    select.disabled = false;
+  }
+}
+
+async function alCambiarTalla() {
+  const talla = document.getElementById('f-talla').value;
+  const warnEl = document.getElementById('stock-warn');
+  warnEl.classList.add('hidden');
+
+  if (!talla) return;
+
+  try {
+    // Consultar stock fresco al cambiar talla
+    const { solMap, totalMap } = await obtenerStock(true);
+    const tallaAnterior = currentParticipante?.talla_polo || '';
+    const restante = calcularRestante(talla, solMap, totalMap, tallaAnterior);
+
+    if (restante !== null && restante <= 0) {
+      // La talla se agotó mientras el usuario miraba la pantalla
+      warnEl.textContent = 'La talla seleccionada no cuenta con stock disponible. Por favor, elija otra talla.';
+      warnEl.classList.remove('hidden');
+      document.getElementById('btn-confirmar').disabled = true;
+    } else {
+      document.getElementById('btn-confirmar').disabled = false;
+      if (restante !== null && restante <= 5) {
+        warnEl.textContent = `⚠ Quedan pocas unidades de talla ${talla}. Confirma pronto tu registro.`;
+        warnEl.classList.remove('hidden');
+      }
+    }
+  } catch (e) {
+    // Silenciar error en cambio de talla — se validará al confirmar
+  }
+}
+
+async function verificarStockTallaSeleccionada(talla, solMap, totalMap) {
+  const warnEl = document.getElementById('stock-warn');
+  const tallaAnterior = currentParticipante?.talla_polo || '';
+  const restante = calcularRestante(talla, solMap, totalMap, tallaAnterior);
+  if (restante !== null && restante <= 5 && restante > 0) {
+    warnEl.textContent = `⚠ Quedan pocas unidades de talla ${talla}. Confirma pronto tu registro.`;
+    warnEl.classList.remove('hidden');
   }
 }
 
@@ -792,6 +843,7 @@ async function confirmarRegistro() {
   const bus   = document.getElementById('f-bus').value;
   const talla = document.getElementById('f-talla').value;
   const btn   = document.getElementById('btn-confirmar');
+  const warnEl = document.getElementById('stock-warn');
 
   if (!bus) {
     alert('Por favor selecciona tu número de bus.');
@@ -804,33 +856,24 @@ async function confirmarRegistro() {
 
   btn.innerHTML = '<span class="spinner"></span>Guardando…';
   btn.disabled = true;
+  warnEl.classList.add('hidden');
 
   try {
-    // Verificar stock una vez más antes de guardar (anti race condition)
-    const [pedidos, stockData] = await Promise.all([
-      sbFetch('/rest/v1/participantes?select=talla_polo&talla_polo=not.is.null'),
-      sbFetch('/rest/v1/stock_polos?select=talla,total').catch(() => null),
-    ]);
-
-    const solMap = {};
-    (pedidos || []).forEach(p => {
-      if (p.talla_polo) solMap[p.talla_polo] = (solMap[p.talla_polo] || 0) + 1;
-    });
-    const totalMap = {};
-    if (stockData) stockData.forEach(r => { totalMap[r.talla] = r.total; });
-
+    // ── 1. Verificar stock en tiempo real (anti concurrencia) ──────────────
+    const { solMap, totalMap } = await obtenerStock(true); // forzar consulta fresca
     const tallaAnterior = currentParticipante.talla_polo || '';
-    const solAjustado = (talla === tallaAnterior)
-      ? Math.max(0, (solMap[talla] || 0) - 1)
-      : (solMap[talla] || 0);
-    const total = totalMap[talla];
-    if (total !== undefined && solAjustado >= total) {
-      alert(`Lo sentimos, la talla ${talla} acaba de agotarse. Por favor selecciona otra talla.`);
+    const restante = calcularRestante(talla, solMap, totalMap, tallaAnterior);
+
+    if (restante !== null && restante <= 0) {
+      warnEl.textContent = `Lo sentimos, la talla ${talla} ya no tiene disponibilidad. Por favor selecciona otra talla.`;
+      warnEl.classList.remove('hidden');
+      // Recargar selector con estado actual de stock
       await cargarTallasDisponibles(tallaAnterior);
       return;
     }
 
-    // Guardar en Supabase — CORRECCIÓN: campo es talla_polo
+    // ── 2. Intentar descontar stock y registrar en una sola operación ──────
+    // Primero actualizamos el participante
     await sbFetch(
       `/rest/v1/participantes?dni=eq.${encodeURIComponent(currentParticipante.dni)}`,
       {
@@ -840,9 +883,50 @@ async function confirmarRegistro() {
       }
     );
 
-    currentParticipante.bus       = bus;
+    // Luego descontamos 1 unidad del stock de la talla seleccionada
+    // Si la talla cambió, solo descontamos si hay registro de stock para esa talla
+    if (totalMap[talla] !== undefined) {
+      const stockActual = totalMap[talla];
+
+      // Verificación final: re-leer stock directo antes de decrementar
+      const stockFinal = await sbFetch(
+        `/rest/v1/stock_polos?select=disponibles&talla=eq.${encodeURIComponent(talla)}&limit=1`
+      ).catch(() => null);
+
+      const disponiblesActuales = stockFinal?.[0]?.disponibles ?? stockActual;
+
+      if (disponiblesActuales <= 0) {
+        // Revertir el registro del participante
+        await sbFetch(
+          `/rest/v1/participantes?dni=eq.${encodeURIComponent(currentParticipante.dni)}`,
+          {
+            method: 'PATCH',
+            prefer: 'return=minimal',
+            body: JSON.stringify({ bus, talla_polo: tallaAnterior || null, registrado: false }),
+          }
+        ).catch(() => {});
+        warnEl.textContent = `La talla ${talla} acaba de agotarse (otro usuario tomó la última unidad). Por favor selecciona otra talla.`;
+        warnEl.classList.remove('hidden');
+        await cargarTallasDisponibles(tallaAnterior);
+        return;
+      }
+
+      // Decrementar stock (optimistic: disponibles - 1)
+      await sbFetch(
+        `/rest/v1/stock_polos?talla=eq.${encodeURIComponent(talla)}`,
+        {
+          method: 'PATCH',
+          prefer: 'return=minimal',
+          body: JSON.stringify({ disponibles: disponiblesActuales - 1 }),
+        }
+      );
+    }
+
+    // ── 3. Actualizar estado local y navegar a la ficha ────────────────────
+    currentParticipante.bus        = bus;
     currentParticipante.talla_polo = talla;
     currentParticipante.registrado = true;
+    _stockCache = null; // invalidar caché tras confirmar
 
     rellenarFicha(currentParticipante);
     go('s-ficha');
@@ -1178,7 +1262,7 @@ async function renderStock() {
   try {
     const [pedidos, stockData] = await Promise.all([
       sbFetch('/rest/v1/participantes?select=talla_polo&talla_polo=not.is.null'),
-      sbFetch('/rest/v1/stock_polos?select=talla,total').catch(() => null),
+      sbFetch('/rest/v1/stock_polos?select=talla,disponibles').catch(() => null),
     ]);
 
     const solMap = {};
@@ -1187,7 +1271,7 @@ async function renderStock() {
     });
 
     const totalMap = {};
-    if (stockData) stockData.forEach(r => { totalMap[r.talla] = r.total; });
+    if (stockData) stockData.forEach(r => { totalMap[r.talla] = r.disponibles; });
 
     let okCount = 0, bajoCount = 0, agotCount = 0;
     let alertaTextos = [];
@@ -1263,12 +1347,12 @@ async function exportarCSV(modo) {
     if (modo === 'stock') {
       const [pedidos, stockData] = await Promise.all([
         sbFetch('/rest/v1/participantes?select=talla_polo&talla_polo=not.is.null'),
-        sbFetch('/rest/v1/stock_polos?select=talla,total').catch(() => null),
+        sbFetch('/rest/v1/stock_polos?select=talla,disponibles').catch(() => null),
       ]);
       const solMap = {};
       (pedidos || []).forEach(p => { if (p.talla_polo) solMap[p.talla_polo] = (solMap[p.talla_polo] || 0) + 1; });
       const totalMap = {};
-      if (stockData) stockData.forEach(r => { totalMap[r.talla] = r.total; });
+      if (stockData) stockData.forEach(r => { totalMap[r.talla] = r.disponibles; });
       headers = ['Talla', 'Total stock', 'Pedidos', 'Disponibles'];
       rows = TODAS_TALLAS.map(t => {
         const sol = solMap[t] || 0;
