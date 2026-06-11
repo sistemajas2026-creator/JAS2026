@@ -698,7 +698,7 @@ async function buscarDNI() {
     if (p.bus) busSelect.value = p.bus;
 
     // Cargar tallas disponibles
-    await cargarTallasDisponibles(p.talla_polo || '');
+    await cargarTallasDisponibles(''); // sin preselección — participante elige desde cero
 
     go('s-participante-form');
 
