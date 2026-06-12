@@ -457,6 +457,7 @@
   <div class="topbar">
     <button class="topbar-back" onclick="go('s-login')">‹</button>
     <h1>Dashboard JAS 2026</h1>
+    <button id="btn-refresh" onclick="refreshDashboard()" style="background:rgba(255,255,255,.15);border:none;color:#fff;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center" title="Actualizar datos">🔄</button>
     <span class="topbar-badge">Admin</span>
   </div>
 
@@ -505,7 +506,7 @@
         <div class="sc-label">Tallas con alerta de stock</div>
       </div>
     </div>
-    <button class="btn btn-outline" onclick="exportarCSV()">📥 Exportar informe completo</button>
+    <button class="btn btn-outline" onclick="exportarExcel()">📥 Exportar informe completo (Excel)</button>
   </div>
 
   <!-- TAB: ESTACAS -->
@@ -524,7 +525,7 @@
     <div class="stake-list" id="stake-list">
       <div style="padding:18px;text-align:center;color:var(--gray-4);font-size:13px">Cargando estacas…</div>
     </div>
-    <button class="btn btn-outline" onclick="exportarCSV('estacas')">📥 Exportar por estaca</button>
+    <button class="btn btn-outline" onclick="exportarExcel('estacas')">📥 Exportar por estaca (Excel)</button>
   </div>
 
   <!-- TAB: STOCK -->
@@ -548,13 +549,13 @@
       <div style="padding:18px;text-align:center;color:var(--gray-4);font-size:13px">Cargando stock…</div>
     </div>
     <div id="stock-alerta-banner" class="alert alert-warn hidden"></div>
-    <button class="btn btn-outline" onclick="exportarCSV('stock')">📥 Exportar stock</button>
+    <button class="btn btn-outline" onclick="exportarExcel('stock')">📥 Exportar stock (Excel)</button>
   </div>
 
 
   <!-- TAB: BUSES -->
   <div id="tab-buses" class="tab-panel">
-    <p class="sec-title">Distribución por bus — todas las estacas</p>
+    <p class="sec-title">Resumen global — participantes registrados por bus</p>
 
     <!-- Resumen global por bus -->
     <div class="stats-grid" style="grid-template-columns:repeat(5,1fr);gap:8px" id="buses-resumen">
@@ -580,19 +581,13 @@
       </div>
     </div>
 
-    <!-- Tabla: participantes por estaca x bus -->
-    <p class="sec-title" style="margin-top:4px">Participantes por estaca y bus</p>
+    <!-- Desglose por estaca -->
+    <p class="sec-title" style="margin-top:4px">Desglose por estaca <span style="font-size:10px;font-weight:400;text-transform:none;color:var(--gray-3)">(solo registrados)</span></p>
     <div id="buses-estaca-list" style="background:var(--white);border-radius:var(--r);overflow:hidden">
       <div style="padding:18px;text-align:center;color:var(--gray-4);font-size:13px">Cargando…</div>
     </div>
 
-    <!-- Tabla: tallas por bus (para armar kits) -->
-    <p class="sec-title" style="margin-top:4px">Tallas de polo por bus <span style="font-size:10px;font-weight:400;text-transform:none">(para armar kits)</span></p>
-    <div id="buses-tallas-list" style="background:var(--white);border-radius:var(--r);overflow:hidden">
-      <div style="padding:18px;text-align:center;color:var(--gray-4);font-size:13px">Cargando…</div>
-    </div>
-
-    <button class="btn btn-outline" onclick="exportarCSV('buses')">📥 Exportar informe de buses</button>
+    <button class="btn btn-outline" onclick="exportarExcel('buses')" style="margin-top:4px">📥 Exportar informe de buses (Excel)</button>
   </div>
 
 </div><!-- /s-admin -->
@@ -1071,13 +1066,18 @@ async function renderDashboard() {
 // ════════════════════════════════════════
 async function renderBuses() {
   const BUSES = ['Bus 1','Bus 2','Bus 3','Bus 4','Bus 5'];
-  const TALLAS = ['XS','S','M','L','XL','XXL'];
 
   try {
-    const data = await sbFetch('/rest/v1/participantes?select=estaca,cc,bus,talla_polo&bus=not.is.null');
+    // Solo registrados
+    const data = await sbFetch('/rest/v1/participantes?select=estaca,cc,bus&registrado=eq.true&bus=not.is.null');
+
     if (!data || data.length === 0) {
-      document.getElementById('buses-estaca-list').innerHTML = '<div style="padding:18px;text-align:center;color:var(--gray-4);font-size:13px">Sin datos de buses aún.</div>';
-      document.getElementById('buses-tallas-list').innerHTML = '<div style="padding:18px;text-align:center;color:var(--gray-4);font-size:13px">Sin datos.</div>';
+      document.getElementById('buses-estaca-list').innerHTML =
+        '<div style="padding:18px;text-align:center;color:var(--gray-4);font-size:13px">Sin participantes registrados con bus asignado aún.</div>';
+      BUSES.forEach((b, i) => {
+        const el = document.getElementById('db-b' + (i+1));
+        if (el) el.textContent = '0';
+      });
       return;
     }
 
@@ -1090,65 +1090,55 @@ async function renderBuses() {
       if (el) el.textContent = globalBus[b] || 0;
     });
 
-    // ── Tabla: estaca × bus
+    // ── Agrupar por estaca
     const estacaMap = {};
     data.forEach(p => {
-      if (!estacaMap[p.estaca]) estacaMap[p.estaca] = { cc: p.cc, buses: {} };
-      if (p.bus) estacaMap[p.estaca].buses[p.bus] = (estacaMap[p.estaca].buses[p.bus] || 0) + 1;
-    });
-
-    const estacas = Object.entries(estacaMap).sort((a,b) => a[0].localeCompare(b[0]));
-
-    const tableHTML = '<div style="overflow-x:auto"><table class="bus-table">' +
-      '<thead><tr><th>Estaca</th><th>CC</th>' +
-      BUSES.map(b => '<th>' + b + '</th>').join('') +
-      '<th>Total</th></tr></thead><tbody>' +
-      estacas.map(([nombre, v]) => {
-        const total = Object.values(v.buses).reduce((a,b) => a+b, 0);
-        return '<tr><td>' + nombre + '</td><td style="color:var(--gray-4);font-weight:400">' + v.cc + '</td>' +
-          BUSES.map(b => {
-            const n = v.buses[b] || 0;
-            return '<td><span class="bus-num-pill' + (n === 0 ? ' zero' : '') + '">' + (n || '—') + '</span></td>';
-          }).join('') +
-          '<td><strong>' + total + '</strong></td></tr>';
-      }).join('') +
-      '<tr style="background:var(--blue-lt)"><td colspan="2" style="font-weight:700;color:var(--blue)">TOTAL</td>' +
-      BUSES.map(b => '<td><strong style="color:var(--blue)">' + (globalBus[b] || 0) + '</strong></td>').join('') +
-      '<td><strong style="color:var(--blue)">' + data.length + '</strong></td></tr>' +
-      '</tbody></table></div>';
-
-    document.getElementById('buses-estaca-list').innerHTML = tableHTML;
-
-    // ── Tabla: tallas por bus (para kits)
-    const busTallaMap = {};
-    BUSES.forEach(b => { busTallaMap[b] = {}; TALLAS.forEach(t => busTallaMap[b][t] = 0); });
-    data.forEach(p => {
-      if (p.bus && p.talla_polo && busTallaMap[p.bus]) {
-        busTallaMap[p.bus][p.talla_polo] = (busTallaMap[p.bus][p.talla_polo] || 0) + 1;
+      if (!estacaMap[p.estaca]) estacaMap[p.estaca] = { cc: p.cc, buses: {}, total: 0 };
+      if (p.bus) {
+        estacaMap[p.estaca].buses[p.bus] = (estacaMap[p.estaca].buses[p.bus] || 0) + 1;
+        estacaMap[p.estaca].total++;
       }
     });
 
-    const kitRows = BUSES.map(bus => {
-      const tallas = busTallaMap[bus];
-      const total = Object.values(tallas).reduce((a,b) => a+b, 0);
-      if (total === 0) return '';
-      const tallasHTML = TALLAS
-        .filter(t => tallas[t] > 0)
-        .map(t => '<span class="kit-badge">' + t + ': <span>' + tallas[t] + '</span></span>')
-        .join('');
-      return '<div class="kit-talla-row">' +
-        '<span class="kit-bus-label">' + bus + '</span>' +
-        '<div class="kit-tallas">' + tallasHTML + '</div>' +
-        '<span style="margin-left:auto;font-size:11px;color:var(--gray-3)">' + total + ' polos</span>' +
-        '</div>';
-    }).filter(Boolean).join('');
+    const estacas = Object.entries(estacaMap).sort((a, b) => a[0].localeCompare(b[0]));
 
-    document.getElementById('buses-tallas-list').innerHTML = kitRows ||
-      '<div style="padding:18px;text-align:center;color:var(--gray-4);font-size:13px">Los participantes aún no han seleccionado bus.</div>';
+    // ── Renderizar cards por estaca
+    const html = estacas.map(([nombre, v]) => {
+      const busesUsados = Object.keys(v.buses).sort();
+      const numBuses = busesUsados.length;
+      const desglose = busesUsados.map(bus =>
+        `<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 14px;border-bottom:1px solid var(--gray-2)">
+          <span style="font-size:13px;font-weight:600;color:var(--blue)">${bus}</span>
+          <span style="font-size:13px;color:var(--text)">${v.buses[bus]} participante${v.buses[bus] !== 1 ? 's' : ''}</span>
+        </div>`
+      ).join('');
+
+      return `
+        <div style="background:var(--white);border-radius:var(--r);overflow:hidden;border:1px solid var(--gray-2)">
+          <div style="background:var(--blue-lt);padding:11px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--gray-2)">
+            <div>
+              <div style="font-size:14px;font-weight:700;color:var(--blue)">${nombre}</div>
+              <div style="font-size:11px;color:var(--gray-4);margin-top:2px">${v.cc}</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--gray-3)">Buses usados</div>
+              <div style="font-size:22px;font-weight:800;color:var(--blue);line-height:1.1">${numBuses}</div>
+            </div>
+          </div>
+          ${desglose}
+          <div style="padding:8px 14px;background:var(--gray-1);display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:11px;color:var(--gray-4)">Total registrados</span>
+            <span style="font-size:13px;font-weight:700;color:var(--text)">${v.total}</span>
+          </div>
+        </div>`;
+    }).join('');
+
+    document.getElementById('buses-estaca-list').innerHTML =
+      `<div style="display:flex;flex-direction:column;gap:12px;padding:4px 0">${html}</div>`;
 
   } catch (err) {
     document.getElementById('buses-estaca-list').innerHTML =
-      '<div style="padding:18px;color:var(--danger);font-size:13px">Error: ' + err.message + '</div>';
+      `<div style="padding:18px;color:var(--danger);font-size:13px">Error: ${err.message}</div>`;
   }
 }
 
@@ -1306,82 +1296,195 @@ async function renderStock() {
 }
 
 // ════════════════════════════════════════
-// EXPORTAR CSV
+// REFRESH MANUAL
 // ════════════════════════════════════════
-async function exportarCSV(modo) {
+async function refreshDashboard() {
+  const btn = document.getElementById('btn-refresh');
+  btn.style.opacity = '0.5';
+  btn.style.pointerEvents = 'none';
   try {
-    let headers, rows, filename;
+    await renderDashboard();
+  } finally {
+    btn.style.opacity = '1';
+    btn.style.pointerEvents = 'auto';
+  }
+}
 
-    if (modo === 'stock') {
-      const [pedidos, stockData] = await Promise.all([
-        sbFetch('/rest/v1/participantes?select=talla_polo&talla_polo=not.is.null'),
-        sbFetch('/rest/v1/stock_polos?select=talla,disponibles').catch(() => null),
-      ]);
-      const solMap = {};
-      (pedidos || []).forEach(p => { if (p.talla_polo) solMap[p.talla_polo] = (solMap[p.talla_polo] || 0) + 1; });
-      const totalMap = {};
-      if (stockData) stockData.forEach(r => { totalMap[r.talla] = r.disponibles; });
-      headers = ['Talla', 'Total stock', 'Pedidos', 'Disponibles'];
-      rows = TODAS_TALLAS.map(t => {
-        const sol = solMap[t] || 0;
-        const total = totalMap[t] || '—';
-        const disp = (typeof total === 'number') ? total - sol : '—';
-        return [t, total, sol, disp];
+// ════════════════════════════════════════
+// EXPORTAR EXCEL
+// ════════════════════════════════════════
+async function exportarExcel(modo) {
+  const AZUL   = 'FF1B3A6B';
+  const GOLD   = 'FFE07B15';
+  const BLANCO = 'FFFFFFFF';
+  const AZUL_LT = 'FFE8F0FC';
+  const GRIS   = 'FFF5F5F5';
+
+  function celda(v, opts = {}) {
+    return { v: v ?? '', t: opts.t || 's', s: opts.s || {} };
+  }
+
+  function encabezado(v) {
+    return { v, t: 's', s: {
+      font: { bold: true, color: { rgb: BLANCO }, sz: 11 },
+      fill: { fgColor: { rgb: AZUL } },
+      alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+      border: { bottom: { style: 'thin', color: { rgb: GOLD } } }
+    }};
+  }
+
+  function filaData(v, esAlternada = false, negrita = false) {
+    return { v: v ?? '—', t: 's', s: {
+      font: { bold: negrita, sz: 10 },
+      fill: { fgColor: { rgb: esAlternada ? AZUL_LT : BLANCO } },
+      alignment: { vertical: 'center' },
+    }};
+  }
+
+  function filaTotales(v) {
+    return { v: v ?? 0, t: 's', s: {
+      font: { bold: true, color: { rgb: AZUL }, sz: 11 },
+      fill: { fgColor: { rgb: GRIS } },
+      alignment: { horizontal: 'center', vertical: 'center' },
+    }};
+  }
+
+  try {
+    // Cargar SheetJS si no está
+    if (typeof XLSX === 'undefined') {
+      await new Promise((res, rej) => {
+        const s = document.createElement('script');
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+        s.onload = res; s.onerror = rej;
+        document.head.appendChild(s);
       });
-      filename = 'stock_tallas_jas2026.csv';
-    } else if (modo === 'buses') {
-      const data = await sbFetch('/rest/v1/participantes?select=estaca,cc,bus,talla_polo&bus=not.is.null');
-      const BUSES = ['Bus 1','Bus 2','Bus 3','Bus 4','Bus 5'];
-      const TALLAS = ['XS','S','M','L','XL','XXL'];
-      // Sheet 1: estaca x bus
-      headers = ['Estaca', 'CC', ...BUSES, 'Total'];
-      const estacaMap = {};
-      (data||[]).forEach(p => {
-        if (!estacaMap[p.estaca]) estacaMap[p.estaca] = { cc: p.cc, buses: {} };
-        if (p.bus) estacaMap[p.estaca].buses[p.bus] = (estacaMap[p.estaca].buses[p.bus]||0)+1;
+    }
+
+    const wb = XLSX.utils.book_new();
+
+    // ── HOJA 1: PARTICIPANTES COMPLETO ──────────────────────────────────────
+    {
+      const data = await sbFetch('/rest/v1/participantes?select=dni,nombre,cc,estaca,bus,mesa,salon,compania,talla_polo,consejeros,habitacion,registrado');
+      const cols = ['DNI','Nombre','CC','Estaca','Bus','Mesa','Salón','Compañía','Talla Polo','Consejeros','Habitación','Registrado'];
+      const aoa = [cols.map(encabezado)];
+      (data || []).forEach((r, i) => {
+        aoa.push([
+          filaData(r.dni, i%2===1),
+          filaData(r.nombre, i%2===1, true),
+          filaData(r.cc, i%2===1),
+          filaData(r.estaca, i%2===1),
+          filaData(r.bus, i%2===1),
+          filaData(r.mesa, i%2===1),
+          filaData(r.salon, i%2===1),
+          filaData(r.compania, i%2===1),
+          filaData(r.talla_polo, i%2===1),
+          filaData(r.consejeros, i%2===1),
+          filaData(r.habitacion, i%2===1),
+          filaData(r.registrado ? 'Sí' : 'No', i%2===1),
+        ]);
       });
-      rows = Object.entries(estacaMap).map(([nombre,v]) => [
-        nombre, v.cc,
-        ...BUSES.map(b => v.buses[b]||0),
-        BUSES.reduce((s,b) => s+(v.buses[b]||0),0)
-      ]);
-      // Add tallas section
-      rows.push([]);
-      rows.push(['BUS', ...TALLAS, 'TOTAL']);
-      const busTallaMap = {};
-      BUSES.forEach(b => { busTallaMap[b]={}; TALLAS.forEach(t => busTallaMap[b][t]=0); });
-      (data||[]).forEach(p => { if(p.bus&&p.talla_polo&&busTallaMap[p.bus]) busTallaMap[p.bus][p.talla_polo]=(busTallaMap[p.bus][p.talla_polo]||0)+1; });
-      BUSES.forEach(b => rows.push([b,...TALLAS.map(t=>busTallaMap[b][t]||0),TALLAS.reduce((s,t)=>s+(busTallaMap[b][t]||0),0)]));
-      filename = 'buses_kits_jas2026.csv';
-    } else if (modo === 'estacas') {
+      const ws = XLSX.utils.aoa_to_sheet(aoa);
+      ws['!cols'] = [10,28,18,22,8,8,8,12,10,20,14,10].map(w => ({ wch: w }));
+      ws['!rows'] = [{ hpt: 22 }];
+      XLSX.utils.book_append_sheet(wb, ws, 'Participantes');
+    }
+
+    // ── HOJA 2: ESTACAS ──────────────────────────────────────────────────────
+    {
       const data = await sbFetch('/rest/v1/participantes?select=estaca,registrado');
-      headers = ['Estaca', 'Total', 'Registrados', 'Pendientes', '% Avance'];
       const map = {};
       (data || []).forEach(p => {
         if (!map[p.estaca]) map[p.estaca] = { total: 0, reg: 0 };
         map[p.estaca].total++;
         if (p.registrado) map[p.estaca].reg++;
       });
-      rows = Object.entries(map).map(([nombre, v]) => [
-        nombre, v.total, v.reg, v.total - v.reg,
-        v.total ? Math.round((v.reg / v.total) * 100) + '%' : '0%'
-      ]);
-      filename = 'estacas_jas2026.csv';
-    } else {
-      const data = await sbFetch('/rest/v1/participantes?select=dni,nombre,cc,estaca,bus,mesa,salon,compania,talla_polo,consejeros,habitacion,registrado');
-      headers = ['DNI', 'Nombre', 'CC', 'Estaca', 'Bus', 'Mesa', 'Salón', 'Compañía', 'Talla Polo', 'Consejeros', 'Habitación', 'Registrado'];
-      rows = (data || []).map(r => [r.dni, r.nombre, r.cc, r.estaca, r.bus, r.mesa, r.salon, r.compania, r.talla_polo, r.consejeros, r.habitacion, r.registrado ? 'Sí' : 'No']);
-      filename = 'participantes_jas2026.csv';
+      const cols = ['Estaca','Total inscritos','Registrados','Pendientes','% Avance'];
+      const aoa = [cols.map(encabezado)];
+      let totTotal=0, totReg=0;
+      Object.entries(map).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([nombre, v], i) => {
+        const pct = v.total ? Math.round((v.reg/v.total)*100) : 0;
+        totTotal += v.total; totReg += v.reg;
+        aoa.push([
+          filaData(nombre, i%2===1, true),
+          filaData(String(v.total), i%2===1),
+          filaData(String(v.reg), i%2===1),
+          filaData(String(v.total - v.reg), i%2===1),
+          filaData(pct + '%', i%2===1),
+        ]);
+      });
+      const totPct = totTotal ? Math.round((totReg/totTotal)*100) : 0;
+      aoa.push([filaTotales('TOTAL'), filaTotales(String(totTotal)), filaTotales(String(totReg)), filaTotales(String(totTotal-totReg)), filaTotales(totPct+'%')]);
+      const ws = XLSX.utils.aoa_to_sheet(aoa);
+      ws['!cols'] = [24,16,14,12,12].map(w => ({ wch: w }));
+      ws['!rows'] = [{ hpt: 22 }];
+      XLSX.utils.book_append_sheet(wb, ws, 'Estacas');
     }
 
-    const csv = [headers, ...rows]
-      .map(r => r.map(v => '"' + String(v ?? '').replace(/"/g, '""') + '"').join(','))
-      .join('\n');
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = filename; a.click();
-    URL.revokeObjectURL(url);
+    // ── HOJA 3: BUSES ────────────────────────────────────────────────────────
+    {
+      const BUSES = ['Bus 1','Bus 2','Bus 3','Bus 4','Bus 5'];
+      const data = await sbFetch('/rest/v1/participantes?select=estaca,cc,bus&registrado=eq.true&bus=not.is.null');
+      const estacaMap = {};
+      (data || []).forEach(p => {
+        if (!estacaMap[p.estaca]) estacaMap[p.estaca] = { cc: p.cc, buses: {} };
+        if (p.bus) estacaMap[p.estaca].buses[p.bus] = (estacaMap[p.estaca].buses[p.bus] || 0) + 1;
+      });
+      const cols = ['Estaca','CC',...BUSES,'Buses usados','Total registrados'];
+      const aoa = [cols.map(encabezado)];
+      const globalBus = {}; BUSES.forEach(b => globalBus[b]=0);
+      Object.entries(estacaMap).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([nombre, v], i) => {
+        const total = Object.values(v.buses).reduce((a,b)=>a+b, 0);
+        const busesUsados = Object.keys(v.buses).length;
+        BUSES.forEach(b => { globalBus[b] += (v.buses[b]||0); });
+        aoa.push([
+          filaData(nombre, i%2===1, true),
+          filaData(v.cc, i%2===1),
+          ...BUSES.map(b => filaData(v.buses[b] ? String(v.buses[b]) : '—', i%2===1)),
+          filaData(String(busesUsados), i%2===1),
+          filaData(String(total), i%2===1),
+        ]);
+      });
+      const totTotal = data.length;
+      aoa.push([filaTotales('TOTAL'), filaTotales(''), ...BUSES.map(b => filaTotales(String(globalBus[b]||0))), filaTotales(''), filaTotales(String(totTotal))]);
+      const ws = XLSX.utils.aoa_to_sheet(aoa);
+      ws['!cols'] = [24,18,10,10,10,10,10,12,14].map(w => ({ wch: w }));
+      ws['!rows'] = [{ hpt: 22 }];
+      XLSX.utils.book_append_sheet(wb, ws, 'Buses');
+    }
+
+    // ── HOJA 4: STOCK POLOS ──────────────────────────────────────────────────
+    {
+      const [pedidos, stockData] = await Promise.all([
+        sbFetch('/rest/v1/participantes?select=talla_polo&talla_polo=not.is.null'),
+        sbFetch('/rest/v1/stock_polos?select=talla,disponibles').catch(() => null),
+      ]);
+      const solMap = {};
+      (pedidos || []).forEach(p => { if (p.talla_polo) solMap[p.talla_polo] = (solMap[p.talla_polo]||0)+1; });
+      const totalMap = {};
+      if (stockData) stockData.forEach(r => { totalMap[r.talla] = r.disponibles; });
+      const cols = ['Talla','Total stock','Pedidos','Disponibles','Estado'];
+      const aoa = [cols.map(encabezado)];
+      TODAS_TALLAS.forEach((t, i) => {
+        const sol = solMap[t] || 0;
+        const total = totalMap[t];
+        const disp = (total !== undefined) ? total - sol : null;
+        const estado = disp === null ? 'Sin dato stock' : disp <= 0 ? '🔴 Agotado' : disp <= 10 ? '⚠ Stock bajo' : '✓ OK';
+        aoa.push([
+          filaData(t, i%2===1, true),
+          filaData(total !== undefined ? String(total) : '—', i%2===1),
+          filaData(String(sol), i%2===1),
+          filaData(disp !== null ? String(Math.max(0, disp)) : '—', i%2===1),
+          filaData(estado, i%2===1),
+        ]);
+      });
+      const ws = XLSX.utils.aoa_to_sheet(aoa);
+      ws['!cols'] = [8,14,12,14,16].map(w => ({ wch: w }));
+      ws['!rows'] = [{ hpt: 22 }];
+      XLSX.utils.book_append_sheet(wb, ws, 'Stock Polos');
+    }
+
+    // ── Descargar ────────────────────────────────────────────────────────────
+    XLSX.writeFile(wb, 'JAS2026_Informe.xlsx');
 
   } catch (e) {
     alert('Error al exportar: ' + e.message);
