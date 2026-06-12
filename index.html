@@ -49,6 +49,13 @@
     width: 34px; height: 34px; border-radius: 50%; cursor: pointer;
     font-size: 20px; line-height: 1; display: flex; align-items: center; justify-content: center;
   }
+  .topbar-refresh {
+    background: rgba(255,255,255,.15); border: none; color: var(--white);
+    width: 34px; height: 34px; border-radius: 50%; cursor: pointer;
+    font-size: 18px; line-height: 1; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: opacity .2s;
+  }
+  .topbar-refresh:active { opacity: .6; }
   .topbar-badge {
     background: var(--gold); color: var(--blue);
     font-size: 11px; font-weight: 700; padding: 3px 11px; border-radius: 20px; white-space: nowrap;
@@ -457,7 +464,7 @@
   <div class="topbar">
     <button class="topbar-back" onclick="go('s-login')">‹</button>
     <h1>Dashboard JAS 2026</h1>
-    <button id="btn-refresh" onclick="refreshDashboard()" style="background:rgba(255,255,255,.15);border:none;color:#fff;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center" title="Actualizar datos">🔄</button>
+    <button id="btn-refresh" class="topbar-refresh" onclick="refreshDashboard()" title="Actualizar datos">🔄</button>
     <span class="topbar-badge">Admin</span>
   </div>
 
@@ -555,38 +562,10 @@
 
   <!-- TAB: BUSES -->
   <div id="tab-buses" class="tab-panel">
-    <p class="sec-title">Resumen global — participantes registrados por bus</p>
-
-    <!-- Resumen global por bus -->
-    <div class="stats-grid" style="grid-template-columns:repeat(5,1fr);gap:8px" id="buses-resumen">
-      <div class="stat-card" style="padding:12px 6px">
-        <div class="sc-val" id="db-b1" style="font-size:22px">—</div>
-        <div class="sc-label">Bus 1</div>
-      </div>
-      <div class="stat-card" style="padding:12px 6px">
-        <div class="sc-val" id="db-b2" style="font-size:22px">—</div>
-        <div class="sc-label">Bus 2</div>
-      </div>
-      <div class="stat-card" style="padding:12px 6px">
-        <div class="sc-val" id="db-b3" style="font-size:22px">—</div>
-        <div class="sc-label">Bus 3</div>
-      </div>
-      <div class="stat-card" style="padding:12px 6px">
-        <div class="sc-val" id="db-b4" style="font-size:22px">—</div>
-        <div class="sc-label">Bus 4</div>
-      </div>
-      <div class="stat-card" style="padding:12px 6px">
-        <div class="sc-val" id="db-b5" style="font-size:22px">—</div>
-        <div class="sc-label">Bus 5</div>
-      </div>
-    </div>
-
-    <!-- Desglose por estaca -->
-    <p class="sec-title" style="margin-top:4px">Desglose por estaca <span style="font-size:10px;font-weight:400;text-transform:none;color:var(--gray-3)">(solo registrados)</span></p>
-    <div id="buses-estaca-list" style="background:var(--white);border-radius:var(--r);overflow:hidden">
+    <p class="sec-title">Distribución por estaca <span style="font-size:10px;font-weight:400;text-transform:none;color:var(--gray-3)">(solo registrados)</span></p>
+    <div id="buses-estaca-list">
       <div style="padding:18px;text-align:center;color:var(--gray-4);font-size:13px">Cargando…</div>
     </div>
-
     <button class="btn btn-outline" onclick="exportarExcel('buses')" style="margin-top:4px">📥 Exportar informe de buses (Excel)</button>
   </div>
 
@@ -1065,80 +1044,77 @@ async function renderDashboard() {
 // DASHBOARD — BUSES
 // ════════════════════════════════════════
 async function renderBuses() {
-  const BUSES = ['Bus 1','Bus 2','Bus 3','Bus 4','Bus 5'];
+  const TALLAS = ['XS','S','M','L','XL','XXL'];
+  const container = document.getElementById('buses-estaca-list');
 
   try {
-    // Solo registrados
-    const data = await sbFetch('/rest/v1/participantes?select=estaca,cc,bus&registrado=eq.true&bus=not.is.null');
+    // Solo registrados, con bus y talla_polo
+    const data = await sbFetch('/rest/v1/participantes?select=estaca,cc,bus,talla_polo&registrado=eq.true&bus=not.is.null');
 
     if (!data || data.length === 0) {
-      document.getElementById('buses-estaca-list').innerHTML =
-        '<div style="padding:18px;text-align:center;color:var(--gray-4);font-size:13px">Sin participantes registrados con bus asignado aún.</div>';
-      BUSES.forEach((b, i) => {
-        const el = document.getElementById('db-b' + (i+1));
-        if (el) el.textContent = '0';
-      });
+      container.innerHTML = '<div style="padding:18px;text-align:center;color:var(--gray-4);font-size:13px">Sin participantes registrados con bus asignado aún.</div>';
       return;
     }
 
-    // ── Conteo global por bus
-    const globalBus = {};
-    BUSES.forEach(b => globalBus[b] = 0);
-    data.forEach(p => { if (p.bus && globalBus[p.bus] !== undefined) globalBus[p.bus]++; });
-    BUSES.forEach((b, i) => {
-      const el = document.getElementById('db-b' + (i+1));
-      if (el) el.textContent = globalBus[b] || 0;
-    });
-
-    // ── Agrupar por estaca
+    // Agrupar: estacaMap[estaca][bus] = { total, tallas: {XS:0, S:0, ...} }
     const estacaMap = {};
     data.forEach(p => {
       if (!estacaMap[p.estaca]) estacaMap[p.estaca] = { cc: p.cc, buses: {}, total: 0 };
-      if (p.bus) {
-        estacaMap[p.estaca].buses[p.bus] = (estacaMap[p.estaca].buses[p.bus] || 0) + 1;
-        estacaMap[p.estaca].total++;
+      if (!estacaMap[p.estaca].buses[p.bus]) {
+        estacaMap[p.estaca].buses[p.bus] = { total: 0, tallas: {} };
+        TALLAS.forEach(t => estacaMap[p.estaca].buses[p.bus].tallas[t] = 0);
+      }
+      estacaMap[p.estaca].buses[p.bus].total++;
+      estacaMap[p.estaca].total++;
+      if (p.talla_polo && estacaMap[p.estaca].buses[p.bus].tallas[p.talla_polo] !== undefined) {
+        estacaMap[p.estaca].buses[p.bus].tallas[p.talla_polo]++;
       }
     });
 
     const estacas = Object.entries(estacaMap).sort((a, b) => a[0].localeCompare(b[0]));
 
-    // ── Renderizar cards por estaca
     const html = estacas.map(([nombre, v]) => {
-      const busesUsados = Object.keys(v.buses).sort();
-      const numBuses = busesUsados.length;
-      const desglose = busesUsados.map(bus =>
-        `<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 14px;border-bottom:1px solid var(--gray-2)">
-          <span style="font-size:13px;font-weight:600;color:var(--blue)">${bus}</span>
-          <span style="font-size:13px;color:var(--text)">${v.buses[bus]} participante${v.buses[bus] !== 1 ? 's' : ''}</span>
-        </div>`
-      ).join('');
+      const busesOrdenados = Object.keys(v.buses).sort();
+      const numBuses = busesOrdenados.length;
+
+      const busesHTML = busesOrdenados.map(bus => {
+        const b = v.buses[bus];
+        const tallasHTML = TALLAS
+          .filter(t => b.tallas[t] > 0)
+          .map(t => `<span style="background:var(--gray-1);border:1px solid var(--gray-2);border-radius:6px;padding:3px 9px;font-size:12px;font-weight:600">${t}: <span style="color:var(--blue);font-weight:800">${b.tallas[t]}</span></span>`)
+          .join('');
+
+        return `
+          <div style="padding:11px 14px;border-bottom:1px solid var(--gray-2)">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
+              <span style="font-size:13px;font-weight:700;color:var(--blue)">${bus}</span>
+              <span style="font-size:12px;font-weight:700;background:var(--blue-lt);color:var(--blue);padding:2px 10px;border-radius:20px">${b.total} participante${b.total !== 1 ? 's' : ''}</span>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:5px">
+              ${tallasHTML || '<span style="font-size:11px;color:var(--gray-3)">Sin talla registrada</span>'}
+            </div>
+          </div>`;
+      }).join('');
 
       return `
-        <div style="background:var(--white);border-radius:var(--r);overflow:hidden;border:1px solid var(--gray-2)">
-          <div style="background:var(--blue-lt);padding:11px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--gray-2)">
+        <div style="background:var(--white);border-radius:var(--r);overflow:hidden;border:1px solid var(--gray-2);margin-bottom:12px">
+          <div style="background:var(--blue);padding:12px 14px;display:flex;align-items:center;justify-content:space-between">
             <div>
-              <div style="font-size:14px;font-weight:700;color:var(--blue)">${nombre}</div>
-              <div style="font-size:11px;color:var(--gray-4);margin-top:2px">${v.cc}</div>
+              <div style="font-size:14px;font-weight:700;color:var(--white)">${nombre}</div>
+              <div style="font-size:11px;color:rgba(255,255,255,.65);margin-top:2px">${v.cc}</div>
             </div>
             <div style="text-align:right">
-              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--gray-3)">Buses usados</div>
-              <div style="font-size:22px;font-weight:800;color:var(--blue);line-height:1.1">${numBuses}</div>
+              <div style="font-size:11px;color:rgba(255,255,255,.65);text-transform:uppercase;letter-spacing:.5px">${numBuses} bus${numBuses !== 1 ? 'es' : ''} · ${v.total} registrados</div>
             </div>
           </div>
-          ${desglose}
-          <div style="padding:8px 14px;background:var(--gray-1);display:flex;justify-content:space-between;align-items:center">
-            <span style="font-size:11px;color:var(--gray-4)">Total registrados</span>
-            <span style="font-size:13px;font-weight:700;color:var(--text)">${v.total}</span>
-          </div>
+          ${busesHTML}
         </div>`;
     }).join('');
 
-    document.getElementById('buses-estaca-list').innerHTML =
-      `<div style="display:flex;flex-direction:column;gap:12px;padding:4px 0">${html}</div>`;
+    container.innerHTML = html;
 
   } catch (err) {
-    document.getElementById('buses-estaca-list').innerHTML =
-      `<div style="padding:18px;color:var(--danger);font-size:13px">Error: ${err.message}</div>`;
+    container.innerHTML = `<div style="padding:18px;color:var(--danger);font-size:13px">Error: ${err.message}</div>`;
   }
 }
 
@@ -1314,78 +1290,30 @@ async function refreshDashboard() {
 // EXPORTAR EXCEL
 // ════════════════════════════════════════
 async function exportarExcel(modo) {
-  const AZUL   = 'FF1B3A6B';
-  const GOLD   = 'FFE07B15';
-  const BLANCO = 'FFFFFFFF';
-  const AZUL_LT = 'FFE8F0FC';
-  const GRIS   = 'FFF5F5F5';
-
-  function celda(v, opts = {}) {
-    return { v: v ?? '', t: opts.t || 's', s: opts.s || {} };
-  }
-
-  function encabezado(v) {
-    return { v, t: 's', s: {
-      font: { bold: true, color: { rgb: BLANCO }, sz: 11 },
-      fill: { fgColor: { rgb: AZUL } },
-      alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
-      border: { bottom: { style: 'thin', color: { rgb: GOLD } } }
-    }};
-  }
-
-  function filaData(v, esAlternada = false, negrita = false) {
-    return { v: v ?? '—', t: 's', s: {
-      font: { bold: negrita, sz: 10 },
-      fill: { fgColor: { rgb: esAlternada ? AZUL_LT : BLANCO } },
-      alignment: { vertical: 'center' },
-    }};
-  }
-
-  function filaTotales(v) {
-    return { v: v ?? 0, t: 's', s: {
-      font: { bold: true, color: { rgb: AZUL }, sz: 11 },
-      fill: { fgColor: { rgb: GRIS } },
-      alignment: { horizontal: 'center', vertical: 'center' },
-    }};
-  }
-
   try {
     // Cargar SheetJS si no está
     if (typeof XLSX === 'undefined') {
       await new Promise((res, rej) => {
         const s = document.createElement('script');
         s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-        s.onload = res; s.onerror = rej;
+        s.onload = res; s.onerror = () => rej(new Error('No se pudo cargar la librería Excel'));
         document.head.appendChild(s);
       });
     }
 
     const wb = XLSX.utils.book_new();
 
-    // ── HOJA 1: PARTICIPANTES COMPLETO ──────────────────────────────────────
+    // ── HOJA 1: PARTICIPANTES ────────────────────────────────────────────────
     {
       const data = await sbFetch('/rest/v1/participantes?select=dni,nombre,cc,estaca,bus,mesa,salon,compania,talla_polo,consejeros,habitacion,registrado');
-      const cols = ['DNI','Nombre','CC','Estaca','Bus','Mesa','Salón','Compañía','Talla Polo','Consejeros','Habitación','Registrado'];
-      const aoa = [cols.map(encabezado)];
-      (data || []).forEach((r, i) => {
-        aoa.push([
-          filaData(r.dni, i%2===1),
-          filaData(r.nombre, i%2===1, true),
-          filaData(r.cc, i%2===1),
-          filaData(r.estaca, i%2===1),
-          filaData(r.bus, i%2===1),
-          filaData(r.mesa, i%2===1),
-          filaData(r.salon, i%2===1),
-          filaData(r.compania, i%2===1),
-          filaData(r.talla_polo, i%2===1),
-          filaData(r.consejeros, i%2===1),
-          filaData(r.habitacion, i%2===1),
-          filaData(r.registrado ? 'Sí' : 'No', i%2===1),
-        ]);
-      });
-      const ws = XLSX.utils.aoa_to_sheet(aoa);
-      ws['!cols'] = [10,28,18,22,8,8,8,12,10,20,14,10].map(w => ({ wch: w }));
-      ws['!rows'] = [{ hpt: 22 }];
+      const headers = ['DNI','Nombre','CC','Estaca','Bus','Mesa','Salón','Compañía','Talla Polo','Consejeros','Habitación','Registrado'];
+      const rows = (data || []).map(r => [
+        r.dni, r.nombre, r.cc, r.estaca, r.bus || '—', r.mesa || '—',
+        r.salon || '—', r.compania || '—', r.talla_polo || '—',
+        r.consejeros || '—', r.habitacion || '—', r.registrado ? 'Sí' : 'No'
+      ]);
+      const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+      ws['!cols'] = [10,30,20,24,8,8,8,14,10,22,14,10].map(w => ({ wch: w }));
       XLSX.utils.book_append_sheet(wb, ws, 'Participantes');
     }
 
@@ -1398,57 +1326,53 @@ async function exportarExcel(modo) {
         map[p.estaca].total++;
         if (p.registrado) map[p.estaca].reg++;
       });
-      const cols = ['Estaca','Total inscritos','Registrados','Pendientes','% Avance'];
-      const aoa = [cols.map(encabezado)];
-      let totTotal=0, totReg=0;
-      Object.entries(map).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([nombre, v], i) => {
-        const pct = v.total ? Math.round((v.reg/v.total)*100) : 0;
+      const headers = ['Estaca','Total inscritos','Registrados','Pendientes','% Avance'];
+      let totTotal = 0, totReg = 0;
+      const rows = Object.entries(map).sort((a,b) => a[0].localeCompare(b[0])).map(([nombre, v]) => {
         totTotal += v.total; totReg += v.reg;
-        aoa.push([
-          filaData(nombre, i%2===1, true),
-          filaData(String(v.total), i%2===1),
-          filaData(String(v.reg), i%2===1),
-          filaData(String(v.total - v.reg), i%2===1),
-          filaData(pct + '%', i%2===1),
-        ]);
+        return [nombre, v.total, v.reg, v.total - v.reg, v.total ? Math.round((v.reg/v.total)*100) + '%' : '0%'];
       });
-      const totPct = totTotal ? Math.round((totReg/totTotal)*100) : 0;
-      aoa.push([filaTotales('TOTAL'), filaTotales(String(totTotal)), filaTotales(String(totReg)), filaTotales(String(totTotal-totReg)), filaTotales(totPct+'%')]);
-      const ws = XLSX.utils.aoa_to_sheet(aoa);
-      ws['!cols'] = [24,16,14,12,12].map(w => ({ wch: w }));
-      ws['!rows'] = [{ hpt: 22 }];
+      rows.push(['TOTAL', totTotal, totReg, totTotal - totReg, totTotal ? Math.round((totReg/totTotal)*100) + '%' : '0%']);
+      const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+      ws['!cols'] = [26,16,14,12,12].map(w => ({ wch: w }));
       XLSX.utils.book_append_sheet(wb, ws, 'Estacas');
     }
 
     // ── HOJA 3: BUSES ────────────────────────────────────────────────────────
     {
-      const BUSES = ['Bus 1','Bus 2','Bus 3','Bus 4','Bus 5'];
-      const data = await sbFetch('/rest/v1/participantes?select=estaca,cc,bus&registrado=eq.true&bus=not.is.null');
+      const TALLAS = ['XS','S','M','L','XL','XXL'];
+      const data = await sbFetch('/rest/v1/participantes?select=estaca,cc,bus,talla_polo&registrado=eq.true&bus=not.is.null');
+
+      // Agrupar por estaca → bus → tallas
       const estacaMap = {};
       (data || []).forEach(p => {
         if (!estacaMap[p.estaca]) estacaMap[p.estaca] = { cc: p.cc, buses: {} };
-        if (p.bus) estacaMap[p.estaca].buses[p.bus] = (estacaMap[p.estaca].buses[p.bus] || 0) + 1;
+        if (!estacaMap[p.estaca].buses[p.bus]) estacaMap[p.estaca].buses[p.bus] = { total: 0, tallas: {} };
+        estacaMap[p.estaca].buses[p.bus].total++;
+        if (p.talla_polo) estacaMap[p.estaca].buses[p.bus].tallas[p.talla_polo] = (estacaMap[p.estaca].buses[p.bus].tallas[p.talla_polo] || 0) + 1;
       });
-      const cols = ['Estaca','CC',...BUSES,'Buses usados','Total registrados'];
-      const aoa = [cols.map(encabezado)];
-      const globalBus = {}; BUSES.forEach(b => globalBus[b]=0);
-      Object.entries(estacaMap).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([nombre, v], i) => {
-        const total = Object.values(v.buses).reduce((a,b)=>a+b, 0);
-        const busesUsados = Object.keys(v.buses).length;
-        BUSES.forEach(b => { globalBus[b] += (v.buses[b]||0); });
-        aoa.push([
-          filaData(nombre, i%2===1, true),
-          filaData(v.cc, i%2===1),
-          ...BUSES.map(b => filaData(v.buses[b] ? String(v.buses[b]) : '—', i%2===1)),
-          filaData(String(busesUsados), i%2===1),
-          filaData(String(total), i%2===1),
-        ]);
+
+      const headers = ['Estaca','CC','Bus','Total participantes',...TALLAS,'Buses usados'];
+      const rows = [];
+      Object.entries(estacaMap).sort((a,b) => a[0].localeCompare(b[0])).forEach(([nombre, v]) => {
+        const busesOrdenados = Object.keys(v.buses).sort();
+        busesOrdenados.forEach((bus, idx) => {
+          const b = v.buses[bus];
+          rows.push([
+            idx === 0 ? nombre : '',
+            idx === 0 ? v.cc : '',
+            bus,
+            b.total,
+            ...TALLAS.map(t => b.tallas[t] || 0),
+            idx === 0 ? busesOrdenados.length : '',
+          ]);
+        });
+        // fila separadora vacía entre estacas
+        rows.push(['','','','','','','','','','']);
       });
-      const totTotal = data.length;
-      aoa.push([filaTotales('TOTAL'), filaTotales(''), ...BUSES.map(b => filaTotales(String(globalBus[b]||0))), filaTotales(''), filaTotales(String(totTotal))]);
-      const ws = XLSX.utils.aoa_to_sheet(aoa);
-      ws['!cols'] = [24,18,10,10,10,10,10,12,14].map(w => ({ wch: w }));
-      ws['!rows'] = [{ hpt: 22 }];
+
+      const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+      ws['!cols'] = [26,18,8,16,6,6,6,6,6,6,12].map(w => ({ wch: w }));
       XLSX.utils.book_append_sheet(wb, ws, 'Buses');
     }
 
@@ -1459,27 +1383,21 @@ async function exportarExcel(modo) {
         sbFetch('/rest/v1/stock_polos?select=talla,disponibles').catch(() => null),
       ]);
       const solMap = {};
-      (pedidos || []).forEach(p => { if (p.talla_polo) solMap[p.talla_polo] = (solMap[p.talla_polo]||0)+1; });
+      (pedidos || []).forEach(p => { if (p.talla_polo) solMap[p.talla_polo] = (solMap[p.talla_polo] || 0) + 1; });
       const totalMap = {};
       if (stockData) stockData.forEach(r => { totalMap[r.talla] = r.disponibles; });
-      const cols = ['Talla','Total stock','Pedidos','Disponibles','Estado'];
-      const aoa = [cols.map(encabezado)];
-      TODAS_TALLAS.forEach((t, i) => {
+
+      const headers = ['Talla','Total stock','Pedidos','Disponibles','Estado'];
+      const rows = TODAS_TALLAS.map(t => {
         const sol = solMap[t] || 0;
         const total = totalMap[t];
-        const disp = (total !== undefined) ? total - sol : null;
-        const estado = disp === null ? 'Sin dato stock' : disp <= 0 ? '🔴 Agotado' : disp <= 10 ? '⚠ Stock bajo' : '✓ OK';
-        aoa.push([
-          filaData(t, i%2===1, true),
-          filaData(total !== undefined ? String(total) : '—', i%2===1),
-          filaData(String(sol), i%2===1),
-          filaData(disp !== null ? String(Math.max(0, disp)) : '—', i%2===1),
-          filaData(estado, i%2===1),
-        ]);
+        const disp = total !== undefined ? total - sol : null;
+        const estado = disp === null ? 'Sin dato de stock' : disp <= 0 ? 'AGOTADO' : disp <= 10 ? 'Stock bajo' : 'OK';
+        return [t, total ?? '—', sol, disp !== null ? Math.max(0, disp) : '—', estado];
       });
-      const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+      const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
       ws['!cols'] = [8,14,12,14,16].map(w => ({ wch: w }));
-      ws['!rows'] = [{ hpt: 22 }];
       XLSX.utils.book_append_sheet(wb, ws, 'Stock Polos');
     }
 
