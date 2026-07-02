@@ -394,10 +394,6 @@
           <div class="fc-val" id="fc-mesa"></div>
         </div>
         <div class="fc">
-          <div class="fc-label">Salón de equipaje</div>
-          <div class="fc-val" id="fc-salon"></div>
-        </div>
-        <div class="fc">
           <div class="fc-label">Compañía</div>
           <div class="fc-val" id="fc-compania"></div>
         </div>
@@ -892,7 +888,6 @@ function rellenarFicha(p) {
   document.getElementById('fc-estaca').textContent     = p.estaca;
   document.getElementById('fc-bus').textContent        = p.bus        || '—';
   document.getElementById('fc-mesa').textContent       = p.mesa       || '—';
-  document.getElementById('fc-salon').textContent      = p.salon      || '—';
   document.getElementById('fc-compania').textContent   = p.compania   || '—';
   document.getElementById('fc-talla').textContent      = p.talla_polo || '—';
   document.getElementById('fc-consejeros').textContent = p.consejeros || '—';
@@ -1305,15 +1300,15 @@ async function exportarExcel(modo) {
 
     // ── HOJA 1: PARTICIPANTES ────────────────────────────────────────────────
     {
-      const data = await sbFetch('/rest/v1/participantes?select=dni,nombre,cc,estaca,bus,mesa,salon,compania,talla_polo,consejeros,habitacion,registrado');
-      const headers = ['DNI','Nombre','CC','Estaca','Bus','Mesa','Salón','Compañía','Talla Polo','Consejeros','Habitación','Registrado'];
+      const data = await sbFetch('/rest/v1/participantes?select=dni,nombre,cc,estaca,bus,mesa,compania,talla_polo,consejeros,habitacion,registrado');
+      const headers = ['DNI','Nombre','CC','Estaca','Bus','Mesa','Compañía','Talla Polo','Consejeros','Habitación','Registrado'];
       const rows = (data || []).map(r => [
         r.dni, r.nombre, r.cc, r.estaca, r.bus || '—', r.mesa || '—',
-        r.salon || '—', r.compania || '—', r.talla_polo || '—',
+        r.compania || '—', r.talla_polo || '—',
         r.consejeros || '—', r.habitacion || '—', r.registrado ? 'Sí' : 'No'
       ]);
       const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-      ws['!cols'] = [10,30,20,24,8,8,8,14,10,22,14,10].map(w => ({ wch: w }));
+      ws['!cols'] = [10,30,20,24,8,8,14,10,22,14,10].map(w => ({ wch: w }));
       XLSX.utils.book_append_sheet(wb, ws, 'Participantes');
     }
 
