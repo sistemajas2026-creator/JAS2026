@@ -468,6 +468,7 @@
     <button class="dash-tab active" onclick="switchTab(this,'tab-general')">General</button>
     <button class="dash-tab" onclick="switchTab(this,'tab-estacas')">Estacas</button>
     <button class="dash-tab" onclick="switchTab(this,'tab-buses')">Buses</button>
+    <button class="dash-tab" onclick="switchTab(this,'tab-companias')">Compañías</button>
     <button class="dash-tab" onclick="switchTab(this,'tab-stock')">Stock polos</button>
   </div>
 
@@ -563,6 +564,25 @@
       <div style="padding:18px;text-align:center;color:var(--gray-4);font-size:13px">Cargando…</div>
     </div>
     <button class="btn btn-outline" onclick="exportarExcel('buses')" style="margin-top:4px">📥 Exportar informe de buses (Excel)</button>
+  </div>
+
+  <!-- TAB: COMPAÑÍAS -->
+  <div id="tab-companias" class="tab-panel">
+    <p class="sec-title">Registro por compañía</p>
+    <div class="prog-card">
+      <div class="prog-header">
+        <span class="prog-title">Progreso global</span>
+        <span class="prog-pct" id="d-pct-c">0%</span>
+      </div>
+      <div class="prog-track">
+        <div class="prog-fill" id="d-fill-c" style="width:0%"></div>
+      </div>
+      <div class="prog-sub" id="d-sub-c">Cargando…</div>
+    </div>
+    <div class="stake-list" id="compania-list">
+      <div style="padding:18px;text-align:center;color:var(--gray-4);font-size:13px">Cargando compañías…</div>
+    </div>
+    <button class="btn btn-outline" onclick="exportarExcel('companias')">📥 Exportar por compañía (Excel)</button>
   </div>
 
 </div><!-- /s-admin -->
@@ -1029,7 +1049,7 @@ async function adminLogin() {
 // ════════════════════════════════════════
 async function renderDashboard() {
   try {
-    await Promise.all([renderGeneralStats(), renderStakes(), renderStock(), renderBuses()]);
+    await Promise.all([renderGeneralStats(), renderStakes(), renderStock(), renderBuses(), renderCompanias()]);
   } catch (e) {
     console.error('Dashboard error:', e);
   }
@@ -1180,6 +1200,53 @@ async function renderStakes() {
           <span class="stake-pct" style="color:${color}">${pct}%</span>
         </div>`;
     }).join('');
+
+  } catch (err) {
+    container.innerHTML = `<div style="padding:18px;color:var(--danger);font-size:13px">Error: ${err.message}</div>`;
+  }
+}
+
+async function renderCompanias() {
+  const container = document.getElementById('compania-list');
+  try {
+    const data = await sbFetch('/rest/v1/participantes?select=compania,registrado');
+    if (!data || data.length === 0) {
+      container.innerHTML = '<div style="padding:18px;text-align:center;color:var(--gray-4);font-size:13px">Sin datos.</div>';
+      return;
+    }
+
+    const map = {};
+    data.forEach(p => {
+      const key = p.compania || 'Sin asignar';
+      if (!map[key]) map[key] = { total: 0, reg: 0 };
+      map[key].total++;
+      if (p.registrado) map[key].reg++;
+    });
+
+    const companias = Object.entries(map)
+      .map(([nombre, v]) => ({ nombre, ...v }))
+      .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es', { numeric: true }));
+
+    container.innerHTML = companias.map(c => {
+      const pct = c.total ? Math.round((c.reg / c.total) * 100) : 0;
+      const color = pct >= 80 ? '#0F7B6C' : pct >= 50 ? '#C4821A' : '#E05C3A';
+      return `
+        <div class="stake-row">
+          <span class="stake-name">${c.nombre}</span>
+          <div class="stake-bar-wrap">
+            <div class="stake-bar" style="width:${pct}%;background:${color}"></div>
+          </div>
+          <span class="stake-count">${c.reg}/${c.total}</span>
+          <span class="stake-pct" style="color:${color}">${pct}%</span>
+        </div>`;
+    }).join('');
+
+    const totalReg = companias.reduce((s, c) => s + c.reg, 0);
+    const totalAll = companias.reduce((s, c) => s + c.total, 0);
+    const pctGlobal = totalAll ? Math.round((totalReg / totalAll) * 100) : 0;
+    document.getElementById('d-pct-c').textContent = pctGlobal + '%';
+    document.getElementById('d-fill-c').style.width = pctGlobal + '%';
+    document.getElementById('d-sub-c').textContent  = `${totalReg.toLocaleString('es-PE')} registrados · ${(totalAll - totalReg).toLocaleString('es-PE')} pendientes`;
 
   } catch (err) {
     container.innerHTML = `<div style="padding:18px;color:var(--danger);font-size:13px">Error: ${err.message}</div>`;
@@ -1394,6 +1461,30 @@ async function exportarExcel(modo) {
       const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
       ws['!cols'] = [8,14,12,14,16].map(w => ({ wch: w }));
       XLSX.utils.book_append_sheet(wb, ws, 'Stock Polos');
+    }
+
+    // ── HOJA 5: COMPAÑÍAS ───────────────────────────────────────────────────
+    {
+      const data = await sbFetch('/rest/v1/participantes?select=compania,registrado');
+      const map = {};
+      (data || []).forEach(p => {
+        const key = p.compania || 'Sin asignar';
+        if (!map[key]) map[key] = { total: 0, reg: 0 };
+        map[key].total++;
+        if (p.registrado) map[key].reg++;
+      });
+      const headers = ['Compañía','Total inscritos','Registrados','Pendientes','% Avance'];
+      let totTotal = 0, totReg = 0;
+      const rows = Object.entries(map)
+        .sort((a, b) => a[0].localeCompare(b[0], 'es', { numeric: true }))
+        .map(([nombre, v]) => {
+          totTotal += v.total; totReg += v.reg;
+          return [nombre, v.total, v.reg, v.total - v.reg, v.total ? Math.round((v.reg/v.total)*100) + '%' : '0%'];
+        });
+      rows.push(['TOTAL', totTotal, totReg, totTotal - totReg, totTotal ? Math.round((totReg/totTotal)*100) + '%' : '0%']);
+      const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+      ws['!cols'] = [16,16,14,12,12].map(w => ({ wch: w }));
+      XLSX.utils.book_append_sheet(wb, ws, 'Compañías');
     }
 
     // ── Descargar ────────────────────────────────────────────────────────────
