@@ -287,8 +287,8 @@
       Ingresa tu DNI para encontrar tus datos. Solo necesitarás confirmar tu talla de polo y tu bus.
     </div>
     <div class="field">
-      <label>DNI</label>
-      <input type="number" id="dni-input" placeholder="Ej. 74561234" inputmode="numeric" maxlength="8">
+      <label>DNI / Carné de Extranjería</label>
+      <input type="text" id="dni-input" placeholder="Ej. 74561234" inputmode="numeric" pattern="[0-9]{8,9}" maxlength="9">
     </div>
     <div id="dni-error" class="alert alert-danger hidden"></div>
     <button class="btn btn-primary" id="btn-buscar" onclick="buscarDNI()">Buscar mis datos →</button>
@@ -624,8 +624,8 @@ async function buscarDNI() {
   const btn = document.getElementById('btn-buscar');
   errEl.classList.add('hidden');
 
-  if (!/^\d{8}$/.test(dni)) {
-    errEl.textContent = 'Ingresa un DNI válido de 8 dígitos.';
+  if (!/^\d{8,9}$/.test(dni)) {
+    errEl.textContent = 'Ingresa un DNI (8 dígitos) o Carné de Extranjería (9 dígitos) válido.';
     errEl.classList.remove('hidden');
     return;
   }
