@@ -1396,15 +1396,24 @@ async function exportarExcel(modo) {
 
     // ── HOJA 1: PARTICIPANTES ────────────────────────────────────────────────
     {
-      const data = await sbFetchAll('/rest/v1/participantes?select=dni,nombre,cc,estaca,bus,mesa,compania,talla_polo,consejeros,habitacion,registrado');
-      const headers = ['DNI','Nombre','CC','Estaca','Bus','Mesa','Compañía','Talla Polo','Consejeros','Habitación','Registrado'];
-      const rows = (data || []).map(r => [
-        r.dni, r.nombre, r.cc, r.estaca, r.bus || '—', r.mesa || '—',
-        r.compania || '—', r.talla_polo || '—',
-        r.consejeros || '—', r.habitacion || '—', r.registrado ? 'Sí' : 'No'
-      ]);
+      const data = await sbFetchAll('/rest/v1/participantes?select=dni,nombre,cc,estaca,bus,mesa,compania,talla_polo,consejeros,habitacion,registrado,fecha_registro');
+      const headers = ['DNI','Nombre','CC','Estaca','Bus','Mesa','Compañía','Talla Polo','Consejeros','Habitación','Registrado','Fecha de Registro','Hora de Registro'];
+      const rows = (data || []).map(r => {
+        let fecha = '—', hora = '—';
+        if (r.fecha_registro) {
+          const d = new Date(r.fecha_registro);
+          fecha = d.toLocaleDateString('es-PE', { timeZone: 'America/Lima' });
+          hora  = d.toLocaleTimeString('es-PE', { timeZone: 'America/Lima', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+        return [
+          r.dni, r.nombre, r.cc, r.estaca, r.bus || '—', r.mesa || '—',
+          r.compania || '—', r.talla_polo || '—',
+          r.consejeros || '—', r.habitacion || '—', r.registrado ? 'Sí' : 'No',
+          fecha, hora
+        ];
+      });
       const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-      ws['!cols'] = [10,30,20,24,8,8,14,10,22,14,10].map(w => ({ wch: w }));
+      ws['!cols'] = [10,30,20,24,8,8,14,10,22,14,10,14,12].map(w => ({ wch: w }));
       XLSX.utils.book_append_sheet(wb, ws, 'Participantes');
     }
 
