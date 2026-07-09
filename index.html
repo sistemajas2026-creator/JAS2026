@@ -390,12 +390,20 @@
           <div class="fc-val" id="fc-bus"></div>
         </div>
         <div class="fc">
-          <div class="fc-label">Mesa de recojo</div>
-          <div class="fc-val" id="fc-mesa"></div>
+          <div class="fc-label">Barrio</div>
+          <div class="fc-val" id="fc-barrio"></div>
         </div>
         <div class="fc">
           <div class="fc-label">Compañía</div>
           <div class="fc-val" id="fc-compania"></div>
+        </div>
+        <div class="fc">
+          <div class="fc-label">Género</div>
+          <div class="fc-val" id="fc-genero"></div>
+        </div>
+        <div class="fc">
+          <div class="fc-label">Edad</div>
+          <div class="fc-val" id="fc-edad"></div>
         </div>
         <div class="fc gold-bg">
           <div class="fc-label">Talla de polo</div>
@@ -684,7 +692,7 @@ async function buscarDNI() {
 
   try {
     const data = await sbFetch(
-      `/rest/v1/participantes?dni=eq.${encodeURIComponent(dni)}&limit=1`
+      `/rest/v1/registro_jas2026?dni=eq.${encodeURIComponent(dni)}&limit=1`
     );
 
     if (!data || data.length === 0) {
@@ -697,11 +705,11 @@ async function buscarDNI() {
     currentParticipante = p;
 
     // Mostrar datos precargados
-    const primerNombre = p.nombre.split(' ')[0];
+    const primerNombre = p.nombres.split(' ')[0];
     document.getElementById('form-bienvenida').textContent =
       `¡Hola, ${primerNombre}! Verifica tus datos y completa la información faltante.`;
     document.getElementById('pf-dni').textContent    = p.dni;
-    document.getElementById('pf-nombre').textContent = p.nombre;
+    document.getElementById('pf-nombre').textContent = `${p.nombres} ${p.apellidos}`;
     document.getElementById('pf-cc').textContent     = p.cc;
     document.getElementById('pf-estaca').textContent = p.estaca;
 
@@ -746,7 +754,7 @@ async function obtenerStock(forzar = false) {
     return _stockCache;
   }
   const [pedidos, stockData] = await Promise.all([
-    sbFetchAll('/rest/v1/participantes?select=talla_polo&talla_polo=not.is.null'),
+    sbFetchAll('/rest/v1/registro_jas2026?select=talla_polo&talla_polo=not.is.null'),
     sbFetch('/rest/v1/stock_polos?select=talla,disponibles').catch(() => null),
   ]);
   const solMap = {};
@@ -932,11 +940,13 @@ function verFichaExistente() {
 }
 
 function rellenarFicha(p) {
-  document.getElementById('fc-nombre').textContent     = p.nombre;
+  document.getElementById('fc-nombre').textContent     = `${p.nombres} ${p.apellidos}`;
   document.getElementById('fc-cc').textContent         = p.cc + ' · ' + p.estaca;
   document.getElementById('fc-estaca').textContent     = p.estaca;
   document.getElementById('fc-bus').textContent        = p.bus        || '—';
-  document.getElementById('fc-mesa').textContent       = p.mesa       || '—';
+  document.getElementById('fc-genero').textContent     = p.genero     || '—';
+  document.getElementById('fc-edad').textContent       = p.edad ?? '—';
+  document.getElementById('fc-barrio').textContent     = p.barrio     || '—';
   document.getElementById('fc-compania').textContent   = p.compania   || '—';
   document.getElementById('fc-talla').textContent      = p.talla_polo || '—';
   document.getElementById('fc-consejeros').textContent = p.consejeros || '—';
@@ -978,7 +988,7 @@ async function descargarPDF() {
     const pdf = new jsPDF({ orientation: pdfH > pdfW ? 'portrait' : 'landscape', unit: 'mm', format: [pdfW, pdfH] });
     pdf.addImage(imgData, 'PNG', 0, 0, pdfW, pdfH);
 
-    const nombre = (currentParticipante?.nombre || 'ficha').toLowerCase().replace(/\s+/g, '_');
+    const nombre = (`${currentParticipante?.nombres || ''}_${currentParticipante?.apellidos || ''}`.trim() || 'ficha').toLowerCase().replace(/\s+/g, '_');
     pdf.save(`ficha_jas2026_${nombre}.pdf`);
   } catch (e) {
     alert('No se pudo generar el PDF: ' + e.message);
@@ -1093,7 +1103,7 @@ async function renderBuses() {
 
   try {
     // Solo registrados, con bus y talla_polo
-    const data = await sbFetchAll('/rest/v1/participantes?select=estaca,cc,bus,talla_polo&registrado=eq.true&bus=not.is.null');
+    const data = await sbFetchAll('/rest/v1/registro_jas2026?select=estaca,cc,bus,talla_polo&registrado=eq.true&bus=not.is.null');
 
     if (!data || data.length === 0) {
       container.innerHTML = '<div style="padding:18px;text-align:center;color:var(--gray-4);font-size:13px">Sin participantes registrados con bus asignado aún.</div>';
@@ -1164,10 +1174,10 @@ async function renderBuses() {
 
 async function renderGeneralStats() {
   const [totalRes, regRes] = await Promise.all([
-    fetch(SUPABASE_URL + '/rest/v1/participantes?select=count', {
+    fetch(SUPABASE_URL + '/rest/v1/registro_jas2026?select=count', {
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'count=exact', 'Range': '0-0' }
     }),
-    fetch(SUPABASE_URL + '/rest/v1/participantes?registrado=eq.true&select=count', {
+    fetch(SUPABASE_URL + '/rest/v1/registro_jas2026?registrado=eq.true&select=count', {
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'count=exact', 'Range': '0-0' }
     }),
   ]);
@@ -1190,7 +1200,7 @@ async function renderGeneralStats() {
   document.getElementById('d-sub-e').textContent    = `${reg.toLocaleString('es-PE')} registrados · ${pend.toLocaleString('es-PE')} pendientes`;
 
   // Buses únicos en uso
-  const busData = await sbFetchAll('/rest/v1/participantes?select=bus&bus=not.is.null').catch(() => []);
+  const busData = await sbFetchAll('/rest/v1/registro_jas2026?select=bus&bus=not.is.null').catch(() => []);
   const busesUnicos = new Set((busData || []).map(r => r.bus).filter(Boolean)).size;
   document.getElementById('d-buses').textContent = busesUnicos;
 }
@@ -1198,7 +1208,7 @@ async function renderGeneralStats() {
 async function renderStakes() {
   const container = document.getElementById('stake-list');
   try {
-    const data = await sbFetchAll('/rest/v1/participantes?select=estaca,registrado');
+    const data = await sbFetchAll('/rest/v1/registro_jas2026?select=estaca,registrado');
     if (!data || data.length === 0) {
       container.innerHTML = '<div style="padding:18px;text-align:center;color:var(--gray-4);font-size:13px">Sin datos.</div>';
       return;
@@ -1238,7 +1248,7 @@ async function renderStakes() {
 async function renderCompanias() {
   const container = document.getElementById('compania-list');
   try {
-    const data = await sbFetchAll('/rest/v1/participantes?select=compania,registrado');
+    const data = await sbFetchAll('/rest/v1/registro_jas2026?select=compania,registrado');
     if (!data || data.length === 0) {
       container.innerHTML = '<div style="padding:18px;text-align:center;color:var(--gray-4);font-size:13px">Sin datos.</div>';
       return;
@@ -1286,7 +1296,7 @@ async function renderStock() {
   const container = document.getElementById('stock-list');
   try {
     const [pedidos, stockData] = await Promise.all([
-      sbFetchAll('/rest/v1/participantes?select=talla_polo&talla_polo=not.is.null'),
+      sbFetchAll('/rest/v1/registro_jas2026?select=talla_polo&talla_polo=not.is.null'),
       sbFetch('/rest/v1/stock_polos?select=talla,disponibles').catch(() => null),
     ]);
 
@@ -1396,8 +1406,8 @@ async function exportarExcel(modo) {
 
     // ── HOJA 1: PARTICIPANTES ────────────────────────────────────────────────
     {
-      const data = await sbFetchAll('/rest/v1/participantes?select=dni,nombre,cc,estaca,bus,mesa,compania,talla_polo,consejeros,habitacion,registrado,fecha_registro');
-      const headers = ['DNI','Nombre','CC','Estaca','Bus','Mesa','Compañía','Talla Polo','Consejeros','Habitación','Registrado','Fecha de Registro','Hora de Registro'];
+      const data = await sbFetchAll('/rest/v1/registro_jas2026?select=dni,nombres,apellidos,genero,edad,cc,estaca,barrio,bus,compania,talla_polo,consejeros,habitacion,registrado,fecha_registro');
+      const headers = ['DNI','Nombres','Apellidos','Género','Edad','CC','Estaca','Barrio','Bus','Compañía','Talla Polo','Consejeros','Habitación','Registrado','Fecha de Registro','Hora de Registro'];
       const rows = (data || []).map(r => {
         let fecha = '—', hora = '—';
         if (r.fecha_registro) {
@@ -1406,20 +1416,20 @@ async function exportarExcel(modo) {
           hora  = d.toLocaleTimeString('es-PE', { timeZone: 'America/Lima', hour: '2-digit', minute: '2-digit', second: '2-digit' });
         }
         return [
-          r.dni, r.nombre, r.cc, r.estaca, r.bus || '—', r.mesa || '—',
+          r.dni, r.nombres, r.apellidos, r.genero || '—', r.edad ?? '—', r.cc, r.estaca, r.barrio || '—', r.bus || '—',
           r.compania || '—', r.talla_polo || '—',
           r.consejeros || '—', r.habitacion || '—', r.registrado ? 'Sí' : 'No',
           fecha, hora
         ];
       });
       const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-      ws['!cols'] = [10,30,20,24,8,8,14,10,22,14,10,14,12].map(w => ({ wch: w }));
+      ws['!cols'] = [10,20,20,10,6,20,24,18,8,14,10,22,14,10,14,12].map(w => ({ wch: w }));
       XLSX.utils.book_append_sheet(wb, ws, 'Participantes');
     }
 
     // ── HOJA 2: ESTACAS ──────────────────────────────────────────────────────
     {
-      const data = await sbFetchAll('/rest/v1/participantes?select=estaca,registrado');
+      const data = await sbFetchAll('/rest/v1/registro_jas2026?select=estaca,registrado');
       const map = {};
       (data || []).forEach(p => {
         if (!map[p.estaca]) map[p.estaca] = { total: 0, reg: 0 };
@@ -1441,7 +1451,7 @@ async function exportarExcel(modo) {
     // ── HOJA 3: BUSES ────────────────────────────────────────────────────────
     {
       const TALLAS = ['XS','S','M','L','XL','XXL'];
-      const data = await sbFetchAll('/rest/v1/participantes?select=estaca,cc,bus,talla_polo&registrado=eq.true&bus=not.is.null');
+      const data = await sbFetchAll('/rest/v1/registro_jas2026?select=estaca,cc,bus,talla_polo&registrado=eq.true&bus=not.is.null');
 
       // Agrupar por estaca → bus → tallas
       const estacaMap = {};
@@ -1479,7 +1489,7 @@ async function exportarExcel(modo) {
     // ── HOJA 4: STOCK POLOS ──────────────────────────────────────────────────
     {
       const [pedidos, stockData] = await Promise.all([
-        sbFetchAll('/rest/v1/participantes?select=talla_polo&talla_polo=not.is.null'),
+        sbFetchAll('/rest/v1/registro_jas2026?select=talla_polo&talla_polo=not.is.null'),
         sbFetch('/rest/v1/stock_polos?select=talla,disponibles').catch(() => null),
       ]);
       const solMap = {};
@@ -1503,7 +1513,7 @@ async function exportarExcel(modo) {
 
     // ── HOJA 5: COMPAÑÍAS ───────────────────────────────────────────────────
     {
-      const data = await sbFetchAll('/rest/v1/participantes?select=compania,registrado');
+      const data = await sbFetchAll('/rest/v1/registro_jas2026?select=compania,registrado');
       const map = {};
       (data || []).forEach(p => {
         const key = p.compania || 'Sin asignar';
