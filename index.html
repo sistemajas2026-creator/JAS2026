@@ -474,6 +474,7 @@
 
   <div class="dash-tabs">
     <button class="dash-tab active" onclick="switchTab(this,'tab-general')">General</button>
+    <button class="dash-tab" onclick="switchTab(this,'tab-reporte')">Reporte</button>
     <button class="dash-tab" onclick="switchTab(this,'tab-estacas')">Estacas</button>
     <button class="dash-tab" onclick="switchTab(this,'tab-buses')">Buses</button>
     <button class="dash-tab" onclick="switchTab(this,'tab-companias')">Compañías</button>
@@ -538,6 +539,37 @@
       <div style="padding:18px;text-align:center;color:var(--gray-4);font-size:13px">Cargando estacas…</div>
     </div>
     <button class="btn btn-outline" onclick="exportarExcel('estacas')">📥 Exportar por estaca (Excel)</button>
+  </div>
+
+  <!-- TAB: REPORTE CONSOLIDADO -->
+  <div id="tab-reporte" class="tab-panel">
+    <p class="sec-title">Asistencia consolidada — Participantes + Staff</p>
+    <div class="stats-grid three">
+      <div class="stat-card">
+        <div class="sc-val" id="rp-total">—</div>
+        <div class="sc-label">Total asistentes</div>
+      </div>
+      <div class="stat-card teal">
+        <div class="sc-val" id="rp-part">—</div>
+        <div class="sc-label">Participantes</div>
+      </div>
+      <div class="stat-card gold">
+        <div class="sc-val" id="rp-staff">—</div>
+        <div class="sc-label">Staff</div>
+      </div>
+    </div>
+
+    <p class="sec-title" style="margin-top:6px">Por Estaca</p>
+    <div class="stake-list" id="rp-estaca-list">
+      <div style="padding:18px;text-align:center;color:var(--gray-4);font-size:13px">Cargando…</div>
+    </div>
+
+    <p class="sec-title" style="margin-top:6px">Por Consejo de Coordinación</p>
+    <div class="stake-list" id="rp-cc-list">
+      <div style="padding:18px;text-align:center;color:var(--gray-4);font-size:13px">Cargando…</div>
+    </div>
+
+    <button class="btn btn-outline" onclick="exportarExcel('reporte')" style="margin-top:4px">📥 Exportar reporte consolidado (Excel)</button>
   </div>
 
   <!-- TAB: STOCK -->
@@ -1086,9 +1118,57 @@ async function adminLogin() {
 // ════════════════════════════════════════
 // DASHBOARD
 // ════════════════════════════════════════
+async function renderReporte() {
+  const totalEl  = document.getElementById('rp-total');
+  const partEl   = document.getElementById('rp-part');
+  const staffEl  = document.getElementById('rp-staff');
+  const estacaEl = document.getElementById('rp-estaca-list');
+  const ccEl     = document.getElementById('rp-cc-list');
+  try {
+    // Solo cuenta como "asistente" quien ya completó su registro (fecha_registro)
+    const data = await sbFetchAll('/rest/v1/registro_jas2026?registrado=eq.true&select=rol,estaca,cc');
+    if (!data) throw new Error('Sin datos');
+
+    const total = data.length;
+    const part  = data.filter(r => r.rol === 'Participante').length;
+    const staff = data.filter(r => r.rol === 'STAFF').length;
+
+    totalEl.textContent = total.toLocaleString('es-PE');
+    partEl.textContent  = part.toLocaleString('es-PE');
+    staffEl.textContent = staff.toLocaleString('es-PE');
+
+    const renderGrupo = (container, campo) => {
+      const map = {};
+      data.forEach(r => {
+        const key = r[campo] || 'Sin asignar';
+        map[key] = (map[key] || 0) + 1;
+      });
+      const items = Object.entries(map).sort((a, b) => b[1] - a[1]);
+      const max = items.length ? items[0][1] : 1;
+      container.innerHTML = items.length ? items.map(([nombre, count]) => {
+        const pct = Math.round((count / max) * 100);
+        return `
+          <div class="stake-row">
+            <span class="stake-name">${nombre}</span>
+            <div class="stake-bar-wrap">
+              <div class="stake-bar" style="width:${pct}%;background:#2E9BD6"></div>
+            </div>
+            <span class="stake-count">${count}</span>
+          </div>`;
+      }).join('') : '<div style="padding:18px;text-align:center;color:var(--gray-4);font-size:13px">Sin datos.</div>';
+    };
+
+    renderGrupo(estacaEl, 'estaca');
+    renderGrupo(ccEl, 'cc');
+
+  } catch (err) {
+    estacaEl.innerHTML = ccEl.innerHTML = `<div style="padding:18px;color:var(--danger);font-size:13px">Error: ${err.message}</div>`;
+  }
+}
+
 async function renderDashboard() {
   try {
-    await Promise.all([renderGeneralStats(), renderStakes(), renderStock(), renderBuses(), renderCompanias()]);
+    await Promise.all([renderGeneralStats(), renderStakes(), renderStock(), renderBuses(), renderCompanias(), renderReporte()]);
   } catch (e) {
     console.error('Dashboard error:', e);
   }
@@ -1533,6 +1613,54 @@ async function exportarExcel(modo) {
       const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
       ws['!cols'] = [16,16,14,12,12].map(w => ({ wch: w }));
       XLSX.utils.book_append_sheet(wb, ws, 'Compañías');
+    }
+
+    // ── HOJA 6: REPORTE CONSOLIDADO — RESUMEN ───────────────────────────────
+    {
+      const data = await sbFetchAll('/rest/v1/registro_jas2026?registrado=eq.true&select=rol,estaca,cc');
+      const total = data.length;
+      const part  = data.filter(r => r.rol === 'Participante').length;
+      const staff = data.filter(r => r.rol === 'STAFF').length;
+
+      const byEstaca = {};
+      data.forEach(r => { const k = r.estaca || 'Sin asignar'; byEstaca[k] = (byEstaca[k] || 0) + 1; });
+      const byCC = {};
+      data.forEach(r => { const k = r.cc || 'Sin asignar'; byCC[k] = (byCC[k] || 0) + 1; });
+
+      const aoa = [
+        ['REPORTE CONSOLIDADO DE ASISTENCIA — JAS 2026'],
+        [],
+        ['Total asistentes', total],
+        ['Total Participantes', part],
+        ['Total Staff', staff],
+        [],
+        ['Por Estaca', 'Asistentes'],
+        ...Object.entries(byEstaca).sort((a,b) => b[1]-a[1]),
+        [],
+        ['Por Consejo de Coordinación', 'Asistentes'],
+        ...Object.entries(byCC).sort((a,b) => b[1]-a[1]),
+      ];
+      const ws = XLSX.utils.aoa_to_sheet(aoa);
+      ws['!cols'] = [30, 14].map(w => ({ wch: w }));
+      XLSX.utils.book_append_sheet(wb, ws, 'Reporte - Resumen');
+    }
+
+    // ── HOJA 7: REPORTE CONSOLIDADO — DETALLE ───────────────────────────────
+    {
+      const data = await sbFetchAll('/rest/v1/registro_jas2026?registrado=eq.true&select=dni,rol,nombres,apellidos,genero,cc,estaca,barrio,fecha_registro&order=fecha_registro.asc');
+      const headers = ['DNI','Tipo','Nombres','Apellidos','Género','C.C.','Estaca','Barrio','Fecha de Registro','Hora de Registro'];
+      const rows = (data || []).map(r => {
+        let fecha = '—', hora = '—';
+        if (r.fecha_registro) {
+          const d = new Date(r.fecha_registro);
+          fecha = d.toLocaleDateString('es-PE', { timeZone: 'America/Lima' });
+          hora  = d.toLocaleTimeString('es-PE', { timeZone: 'America/Lima', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+        return [r.dni, r.rol, r.nombres, r.apellidos, r.genero || '—', r.cc || '—', r.estaca || '—', r.barrio || '—', fecha, hora];
+      });
+      const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+      ws['!cols'] = [10,12,20,20,10,16,24,18,14,12].map(w => ({ wch: w }));
+      XLSX.utils.book_append_sheet(wb, ws, 'Reporte - Detalle');
     }
 
     // ── Descargar ────────────────────────────────────────────────────────────
