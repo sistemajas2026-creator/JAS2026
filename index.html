@@ -543,7 +543,7 @@
 
   <div class="dash-tabs">
     <button class="dash-tab active" onclick="switchTab(this,'tab-general')">General</button>
-    <button class="dash-tab" onclick="switchTab(this,'tab-reporte')">Reporte</button>
+    <button class="dash-tab" onclick="switchTab(this,'tab-reporte')">Asistencia General</button>
     <button class="dash-tab" onclick="switchTab(this,'tab-estacas')">Estacas</button>
     <button class="dash-tab" onclick="switchTab(this,'tab-buses')">Buses</button>
     <button class="dash-tab" onclick="switchTab(this,'tab-companias')">Compañías</button>
@@ -638,7 +638,7 @@
       <div style="padding:18px;text-align:center;color:var(--gray-4);font-size:13px">Cargando…</div>
     </div>
 
-    <button class="btn btn-outline" onclick="exportarExcel('reporte')" style="margin-top:4px">📥 Exportar reporte consolidado (Excel)</button>
+    <button class="btn btn-outline" onclick="exportarExcel('reporte')" style="margin-top:4px">📥 Exportar asistencia general (Excel)</button>
   </div>
 
   <!-- TAB: STOCK -->
@@ -1412,10 +1412,10 @@ async function renderBuses() {
 
 async function renderGeneralStats() {
   const [totalRes, regRes] = await Promise.all([
-    fetch(SUPABASE_URL + '/rest/v1/registro_jas2026?select=count', {
+    fetch(SUPABASE_URL + '/rest/v1/registro_jas2026?rol=eq.Participante&select=count', {
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'count=exact', 'Range': '0-0' }
     }),
-    fetch(SUPABASE_URL + '/rest/v1/registro_jas2026?registrado=eq.true&select=count', {
+    fetch(SUPABASE_URL + '/rest/v1/registro_jas2026?rol=eq.Participante&registrado=eq.true&select=count', {
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'count=exact', 'Range': '0-0' }
     }),
   ]);
@@ -1437,7 +1437,7 @@ async function renderGeneralStats() {
   document.getElementById('d-fill-e').style.width   = pct + '%';
   document.getElementById('d-sub-e').textContent    = `${reg.toLocaleString('es-PE')} registrados · ${pend.toLocaleString('es-PE')} pendientes`;
 
-  // Buses únicos en uso
+  // Buses únicos en uso (solo participantes usan bus)
   const busData = await sbFetchAll('/rest/v1/registro_jas2026?select=bus&bus=not.is.null').catch(() => []);
   const busesUnicos = new Set((busData || []).map(r => r.bus).filter(Boolean)).size;
   document.getElementById('d-buses').textContent = busesUnicos;
@@ -1446,7 +1446,7 @@ async function renderGeneralStats() {
 async function renderStakes() {
   const container = document.getElementById('stake-list');
   try {
-    const data = await sbFetchAll('/rest/v1/registro_jas2026?select=estaca,registrado');
+    const data = await sbFetchAll('/rest/v1/registro_jas2026?rol=eq.Participante&select=estaca,registrado');
     if (!data || data.length === 0) {
       container.innerHTML = '<div style="padding:18px;text-align:center;color:var(--gray-4);font-size:13px">Sin datos.</div>';
       return;
@@ -1486,7 +1486,7 @@ async function renderStakes() {
 async function renderCompanias() {
   const container = document.getElementById('compania-list');
   try {
-    const data = await sbFetchAll('/rest/v1/registro_jas2026?select=compania,registrado');
+    const data = await sbFetchAll('/rest/v1/registro_jas2026?rol=eq.Participante&select=compania,registrado');
     if (!data || data.length === 0) {
       container.innerHTML = '<div style="padding:18px;text-align:center;color:var(--gray-4);font-size:13px">Sin datos.</div>';
       return;
@@ -1695,7 +1695,7 @@ async function exportarExcel(modo) {
 
     // ── HOJA 2: ESTACAS ──────────────────────────────────────────────────────
     {
-      const data = await sbFetchAll('/rest/v1/registro_jas2026?select=estaca,registrado');
+      const data = await sbFetchAll('/rest/v1/registro_jas2026?rol=eq.Participante&select=estaca,registrado');
       const map = {};
       (data || []).forEach(p => {
         if (!map[p.estaca]) map[p.estaca] = { total: 0, reg: 0 };
@@ -1782,7 +1782,7 @@ async function exportarExcel(modo) {
 
     // ── HOJA 5: COMPAÑÍAS ───────────────────────────────────────────────────
     {
-      const data = await sbFetchAll('/rest/v1/registro_jas2026?select=compania,registrado');
+      const data = await sbFetchAll('/rest/v1/registro_jas2026?rol=eq.Participante&select=compania,registrado');
       const map = {};
       (data || []).forEach(p => {
         const key = p.compania || 'Sin asignar';
@@ -1841,7 +1841,7 @@ async function exportarExcel(modo) {
       estilizarEncabezado(ws, 2, 0);               // título (fila 0)
       estilizarEncabezado(ws, 2, filaHeaderEstaca); // 'Por Estaca' / 'Asistentes'
       estilizarEncabezado(ws, 2, filaHeaderCC);     // 'Por Consejo...' / 'Asistentes'
-      XLSX.utils.book_append_sheet(wb, ws, 'Reporte - Resumen');
+      XLSX.utils.book_append_sheet(wb, ws, 'Asistencia General - Resumen');
     }
 
     // ── HOJA 7: REPORTE CONSOLIDADO — DETALLE ───────────────────────────────
@@ -1860,7 +1860,7 @@ async function exportarExcel(modo) {
       const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
       ws['!cols'] = [10,12,20,20,10,16,24,18,14,12].map(w => ({ wch: w }));
       estilizarEncabezado(ws, headers.length);
-      XLSX.utils.book_append_sheet(wb, ws, 'Reporte - Detalle');
+      XLSX.utils.book_append_sheet(wb, ws, 'Asistencia General - Detalle');
     }
 
     // ── Descargar ────────────────────────────────────────────────────────────
