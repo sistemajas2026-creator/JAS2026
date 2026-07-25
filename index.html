@@ -335,14 +335,9 @@
     </div>
 
     <div class="field">
-      <label>N.° de Bus <span style="font-weight:400;text-transform:none;font-size:11px;color:var(--gray-3)">(máx. 5 por estaca)</span></label>
+      <label>N.° de Bus</label>
       <select id="f-bus">
         <option value="">— Selecciona tu bus —</option>
-        <option value="Bus 1">Bus 1</option>
-        <option value="Bus 2">Bus 2</option>
-        <option value="Bus 3">Bus 3</option>
-        <option value="Bus 4">Bus 4</option>
-        <option value="Bus 5">Bus 5</option>
       </select>
     </div>
 
@@ -704,6 +699,55 @@
 const SUPABASE_URL = 'https://nhrvwzmnkfbbgntfggwu.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ocnZ3em1ua2ZiYmdudGZnZ3d1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwOTI4MDksImV4cCI6MjA5NjY2ODgwOX0.X7kCLzza6qvozXTOixElBKH8DMdjS_TQzfyr0iAoocM';
 
+// ════════════════════════════════════════
+// BUSES ASIGNADOS POR ESTACA
+// (nombres EXACTOS de la columna "estaca" en Supabase, con prefijo "Estaca " y sin tildes)
+// ════════════════════════════════════════
+const BUSES_POR_ESTACA = {
+  // Consejo Lima Este
+  'Estaca Central':            [1, 2],
+  'Estaca Chaclacayo':         [3, 4],
+  'Estaca Chosica':            [5],
+  'Estaca La Molina':          [6],
+  'Estaca Mayorazgo':          [7],
+  'Estaca Santa Anita':        [8, 9],
+  'Estaca Santa Clara':        [10],
+  'Estaca Vitarte':            [11, 12],
+  // Consejo Lima Noreste
+  'Estaca Begonias':           [13],
+  'Estaca Campoy':             [14],
+  'Estaca Canto Grande':       [15],
+  'Estaca Las Flores':         [16],
+  'Estaca Magnolias':          [17],
+  'Estaca Rimac':              [18],
+  'Estaca Wiesse':             [19, 20],
+  // Consejo Lima Sur
+  'Estaca Cañete':             [21],
+  'Estaca La Campiña':         [22],
+  'Estaca Pachacamac':         [23],
+  'Estaca Villa El Salvador':  [24, 25],
+  'Estaca Villa Maria':        [26],
+};
+
+// Llena el <select> de bus solo con los números asignados a la estaca del participante
+function cargarBusesPorEstaca(estaca, busActual) {
+  const select = document.getElementById('f-bus');
+  const buses = BUSES_POR_ESTACA[estaca];
+
+  if (!buses || buses.length === 0) {
+    select.innerHTML = '<option value="">— Sin buses asignados a tu estaca, consulta con tu líder —</option>';
+    return;
+  }
+
+  let opciones = '<option value="">— Selecciona tu bus —</option>';
+  buses.forEach(n => {
+    const val = 'Bus ' + n;
+    const sel = (val === busActual) ? ' selected' : '';
+    opciones += `<option value="${val}"${sel}>${val}</option>`;
+  });
+  select.innerHTML = opciones;
+}
+
 async function sbFetch(path, options = {}) {
   const res = await fetch(SUPABASE_URL + path, {
     ...options,
@@ -838,9 +882,8 @@ async function buscarDNI() {
     document.getElementById('pf-cc').textContent     = p.cc;
     document.getElementById('pf-estaca').textContent = p.estaca;
 
-    // Preseleccionar bus si ya lo eligió antes
-    const busSelect = document.getElementById('f-bus');
-    if (p.bus) busSelect.value = p.bus;
+    // Cargar solo los buses asignados a su estaca (preseleccionando si ya había elegido antes)
+    cargarBusesPorEstaca(p.estaca, p.bus);
 
     // Cargar tallas disponibles
     await cargarTallasDisponibles(''); // sin preselección — participante elige desde cero
