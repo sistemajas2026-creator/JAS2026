@@ -929,7 +929,7 @@ async function buscarDNI() {
 // ════════════════════════════════════════
 // STOCK DE TALLAS
 // ════════════════════════════════════════
-const TODAS_TALLAS = ['XS','S','M','L','XL','XXL'];
+const TODAS_TALLAS = ['S','M','L','XL','XXL'];
 
 // Caché de stock para reutilizar en validaciones
 let _stockCache = null; // { totalMap, solMap, timestamp }
@@ -1189,8 +1189,7 @@ function rellenarFicha(p) {
     cardTalla.style.display     = 'none';
     cardCompania.style.display  = 'none';
     cardConsejeros.style.display = 'none';
-    cardHabitacion.style.display = '';
-    document.getElementById('fc-habitacion').textContent = p.habitacion || '—';
+    cardHabitacion.style.display = 'none';
 
     cardCC.style.display = '';
     document.getElementById('fc-cc-card').textContent = p.cc || '—';
@@ -1406,7 +1405,7 @@ async function renderDashboard() {
 // DASHBOARD — BUSES
 // ════════════════════════════════════════
 async function renderBuses() {
-  const TALLAS = ['XS','S','M','L','XL','XXL'];
+  const TALLAS = ['S','M','L','XL','XXL'];
   const container = document.getElementById('buses-estaca-list');
 
   try {
@@ -1797,7 +1796,7 @@ async function exportarExcel(modo) {
 
     // ── HOJA 3: BUSES ────────────────────────────────────────────────────────
     {
-      const TALLAS = ['XS','S','M','L','XL','XXL'];
+      const TALLAS = ['S','M','L','XL','XXL'];
       const data = await sbFetchAll('/rest/v1/registro_jas2026?select=estaca,cc,bus,talla_polo&registrado=eq.true&bus=not.is.null');
 
       // Agrupar por estaca → bus → tallas
