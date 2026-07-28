@@ -954,13 +954,14 @@ async function obtenerStock(forzar = false) {
   return _stockCache;
 }
 
-// Calcula stock restante para una talla, descontando el pedido anterior del participante si aplica
+// Calcula stock restante para una talla.
+// IMPORTANTE: stock_polos.disponibles YA es el remanente real (el RPC confirmar_registro
+// lo decrementa/incrementa en vivo con cada registro). NO se debe volver a restar solMap aquí,
+// eso causaba doble descuento (bug corregido el 28/07/2026).
 function calcularRestante(talla, solMap, totalMap, tallaAnterior) {
   const total = totalMap[talla];
   if (total === undefined) return null; // sin datos de stock → no restringir
-  const sol = solMap[talla] || 0;
-  const solAjustado = (talla === tallaAnterior) ? Math.max(0, sol - 1) : sol;
-  return total - solAjustado;
+  return total;
 }
 
 async function cargarTallasDisponibles(tallaActual) {
@@ -1189,8 +1190,7 @@ function rellenarFicha(p) {
     cardTalla.style.display     = 'none';
     cardCompania.style.display  = 'none';
     cardConsejeros.style.display = 'none';
-    cardHabitacion.style.display = '';
-    document.getElementById('fc-habitacion').textContent = p.habitacion || '—';
+    cardHabitacion.style.display = 'none';
 
     cardCC.style.display = '';
     document.getElementById('fc-cc-card').textContent = p.cc || '—';
@@ -1631,12 +1631,12 @@ async function renderStock() {
 
     const rows = TODAS_TALLAS.map(talla => {
       const sol   = solMap[talla] || 0;
-      const total = totalMap[talla];
-      const rest  = (total !== undefined) ? total - sol : null;
-      const pct   = total ? Math.min(100, Math.round((sol / total) * 100)) : 100;
+      const rest  = totalMap[talla]; // disponibles YA es el remanente real
+      const totalOriginal = (rest !== undefined) ? rest + sol : undefined; // estimado para el % de la barra
+      const pct   = totalOriginal ? Math.min(100, Math.round((sol / totalOriginal) * 100)) : 100;
 
       let pill, barColor;
-      if (rest === null) {
+      if (rest === undefined) {
         pill = `<span class="stock-pill pill-ok">${sol} pedidos</span>`;
         barColor = '#1B3A6B'; okCount++;
       } else if (rest > 10) {
@@ -1652,8 +1652,8 @@ async function renderStock() {
         alertaTextos.push(`Talla ${talla}: AGOTADA`);
       }
 
-      const sub = rest !== null
-        ? `Pedidos: ${sol} · Total: ${total} · Disponibles: ${Math.max(0, rest)}`
+      const sub = rest !== undefined
+        ? `Pedidos: ${sol} · Total: ${totalOriginal} · Disponibles: ${Math.max(0, rest)}`
         : `Pedidos: ${sol}`;
 
       return `
@@ -1849,13 +1849,13 @@ async function exportarExcel(modo) {
       const totalMap = {};
       if (stockData) stockData.forEach(r => { totalMap[r.talla] = r.disponibles; });
 
-      const headers = ['Talla','Total stock','Pedidos','Disponibles','Estado'];
+      const headers = ['Talla','Total stock (estimado)','Pedidos','Disponibles','Estado'];
       const rows = TODAS_TALLAS.map(t => {
         const sol = solMap[t] || 0;
-        const total = totalMap[t];
-        const disp = total !== undefined ? total - sol : null;
-        const estado = disp === null ? 'Sin dato de stock' : disp <= 0 ? 'AGOTADO' : disp <= 10 ? 'Stock bajo' : 'OK';
-        return [t, total ?? '—', sol, disp !== null ? Math.max(0, disp) : '—', estado];
+        const disp = totalMap[t]; // disponibles YA es el remanente real
+        const totalOriginal = disp !== undefined ? disp + sol : undefined;
+        const estado = disp === undefined ? 'Sin dato de stock' : disp <= 0 ? 'AGOTADO' : disp <= 10 ? 'Stock bajo' : 'OK';
+        return [t, totalOriginal ?? '—', sol, disp !== undefined ? Math.max(0, disp) : '—', estado];
       });
 
       const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
