@@ -1189,7 +1189,8 @@ function rellenarFicha(p) {
     cardTalla.style.display     = 'none';
     cardCompania.style.display  = 'none';
     cardConsejeros.style.display = 'none';
-    cardHabitacion.style.display = 'none';
+    cardHabitacion.style.display = '';
+    document.getElementById('fc-habitacion').textContent = p.habitacion || '—';
 
     cardCC.style.display = '';
     document.getElementById('fc-cc-card').textContent = p.cc || '—';
